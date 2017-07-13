@@ -11,7 +11,7 @@ graph algorithm might help them realize that adding cheese will create a turkey 
 
 ### Building a LayeredGraph for Random Walk with Restart (RWR)
 1. Create a graph and load all nodes into the graph.
-```
+```python
 #instantiate a graph
 import LayeredGraph
 lg = LayeredGraph.LayeredGraph()
@@ -23,7 +23,7 @@ lg.addNode('meal', 'sandwich')
 lg.finalizeNodeList()
 ```
 2. Add all edges to the graph.
-```
+```python
 #values are layer1, node1, layer2, node2, edge weight, and whether the edge is undirected
 lg.addEdge('ingredient', 'cheese', 'meal', 'sandwich', 1, True)
 ...
@@ -31,14 +31,14 @@ lg.addEdge('ingredient', 'turkey', 'meal', 'turkey sandwich', 1, True)
 lg.addEdge('meal', 'sandwich', 'meal', 'turkey sandwich', 1, True)
 ```
 3. Build the graph transition matrix.  The first line describes how different layers interact during random walk, the second actually generates the matrix necessary for random walk.
-```
+```python
 #sets transition rates from one layer to another as equal
 lg.setGraphJumpEqual()
 #calculates the final transition probabilities for a given LayeredGraph
 lg.calculateTransitionMatrix()
 ```
 4. Run the RWR algorithm.  This example will return a ranking of all 'meal' nodes in the graph based on the RWR algorithm.
-```
+```python
 #define the RWR parameters; we have cheese and bread and want to know what meals are closest related to those ingredients
 startNodes={('ingredient', 'cheese'):1.0, ('ingredient', 'bread'):1.0}
 restartProb=0.1
