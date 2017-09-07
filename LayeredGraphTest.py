@@ -669,26 +669,36 @@ def rankCasesFromMana():
     
     return retCases
 
-def calculateBackground(mg):
-    '''
-    Given a multi-graph where the start nodes are ONLY HPO terms, this function calculates the background probabilities
-    of ending up at a node assuming all HPO terms are used.
-    @param mg - the LayeredGraph we are calculating the background for
-    '''
-    hpoWeights = pickle.load(open('/Users/matt/data/HPO_dl/multiHpoWeight_biogrid_pushup.pickle', 'r'))
-    hpoNodes = mg.nodes['HPO']
+def rankCase(mg):
+    #training case 882
+    #arthrogryposis, failure to thrive, pneumonia, retinopathy, ophthalmoplegia, dull facial expression, duane anomaly, abnormality of muscle size
+    hpoTerms = set(['HP:0002804', 'HP:0001508', 'HP:0002090', 'HP:0000580', 'HP:0000597', 'HP:0000338', 'HP:0009921', 'HP:0030236'])
+    #minus things explained by piezo2
+    #failure to thrive
+    #hpoTerms = set(['HP:0001508'])
     
-    startProbs = {('HPO', h) : hpoWeights[h] for h in hpoNodes}
-    #startProbs = {('HPO', h) : 1.0 for h in hpoNodes}
+    #primary data
+    hpoWeights = pickle.load(open('/Users/matt/data/HPO_dl/multiHpoWeight_biogrid_pushup.pickle', 'r'))
+    startProbs = {('HPO', h) : hpoWeights[h] for h in hpoTerms}
     restartProb = 0.1
-    bg = mg.calculateBackground(startProbs, restartProb)
-    return bg
+    
+    #background calculation
+    bgNodes = mg.nodes['HPO']
+    bgProbs = {('HPO', h) : hpoWeights[h] for h in mg.nodes['HPO']}
+    bg = mg.calculateBackground(bgProbs, restartProb)
+    
+    rankTypes = set(['gene'])
+    
+    rankedGenes = mg.RWR_rank(startProbs, restartProb, rankTypes, bg)
+    
+    for i, (w, l, g) in enumerate(rankedGenes[0:30]):
+        print i, w, l, g
 
 if __name__ == '__main__':
     pickleGraphFN = '/Users/matt/data/HPO_dl/multigraph.pickle'
     
     #load or generate the graph
-    if False and os.path.exists(pickleGraphFN):
+    if True and os.path.exists(pickleGraphFN):
         print 'Loading from "'+pickleGraphFN+'"'
         mg = pickle.load(open(pickleGraphFN, 'r'))
     else:
@@ -703,14 +713,19 @@ if __name__ == '__main__':
     
     #now run our tests
     print mg
-    '''
+    #'''
     initNodes = {('HPO', 'HP:0003002'): 1.0}
     restartProb = .1
     retSet = set(['HPO', 'gene'])
     print mg.RWR_rank(initNodes, restartProb, retSet)[0:10]
+    #'''
     '''
     st = time.time()
     #runTests(mg)
     testRankings(mg)
     print time.time()-st
+    '''
+    
+    #this is a singleton case we don't know the answer to
+    rankCase(mg)
     
