@@ -1,5 +1,6 @@
 
 import glob
+import json
 import numpy as np
 import os
 #import pickle
@@ -672,10 +673,16 @@ def rankCasesFromMana():
 def rankCase(mg):
     #training case 882
     #arthrogryposis, failure to thrive, pneumonia, retinopathy, ophthalmoplegia, dull facial expression, duane anomaly, abnormality of muscle size
-    hpoTerms = set(['HP:0002804', 'HP:0001508', 'HP:0002090', 'HP:0000580', 'HP:0000597', 'HP:0000338', 'HP:0009921', 'HP:0030236'])
+    #hpoTerms = set(['HP:0002804', 'HP:0001508', 'HP:0002090', 'HP:0000580', 'HP:0000597', 'HP:0000338', 'HP:0009921', 'HP:0030236'])
     #minus things explained by piezo2
     #failure to thrive
     #hpoTerms = set(['HP:0001508'])
+    
+    #udn case 43
+    #cleft palate, congenital hip dysplasia, muscle weakness, increase muscle fatigue, scoliosis, club feet, hypotonia, hypertonia, short stature, muscle hypoplasia, triangular face, brachycephaly, cupped ears, webbed neck, axillary pterygia, pectus excavatum, narrow chest, hypoplastic labia majora
+    hpoTerms = set(['HP:0000175', 'HP:0001385', 'HP:0001324', 'HP:0003750', 'HP:0002650', 'HP:0001762', 'HP:0001290', 'HP:0001276', 'HP:0004322', 'HP:0009004', 'HP:0000325', 'HP:0000248', 'HP:0000378', 'HP:0000465', 'HP:0001060', 'HP:0000767', 'HP:0000774', 'HP:0000059'])
+    #jsonDump = '/Users/matt/Downloads/probando_uno_results.json'
+    jsonDump = '/Users/matt/Downloads/SL154670_results.json'
     
     #primary data
     hpoWeights = pickle.load(open('/Users/matt/data/HPO_dl/multiHpoWeight_biogrid_pushup.pickle', 'r'))
@@ -691,9 +698,32 @@ def rankCase(mg):
     
     rankedGenes = mg.RWR_rank(startProbs, restartProb, rankTypes, bg)
     
-    for i, (w, l, g) in enumerate(rankedGenes[0:30]):
+    print 'Raw gene list:'
+    for i, (w, l, g) in enumerate(rankedGenes[0:20]):
         print i, w, l, g
+    print
+    
+    codiGenes = getCodiGenes(jsonDump)
+    print 'Codi gene list:'
+    count = 0
+    for i, (w, l, g) in enumerate(rankedGenes):
+        if g in codiGenes:
+            print count, w, l, g
+            count += 1
+            if count >= 20:
+                break
 
+def getCodiGenes(jsonDump):
+    dat = json.load(open(jsonDump, 'r'))
+    ret = set([])
+    for r in dat:
+        geneList = r['genes']
+        for v in geneList:
+            for v2 in v['info']:
+                if v2['label'] == 'gene symbol':
+                    ret.add(v2['data'])
+    return ret
+    
 if __name__ == '__main__':
     pickleGraphFN = '/Users/matt/data/HPO_dl/multigraph.pickle'
     
