@@ -1,6 +1,10 @@
 # LayeredGraph
 Methods for building layered graphs and running graph traversal algorithms
 
+## Software Requirements
+1. Python - developed and tested using Python 2.7.12.
+2. Python packages - numpy, scipy
+
 ## LayeredGraph Data Structure
 ### Purpose
 The main purpose of this repository is to store a LayeredGraph (LG) data structure that is stored in LayeredGraph.py.  The LG is a directed graph composed of "layers" of nodes that are connected in different way.
@@ -56,6 +60,10 @@ test cases that were used to compare the results.
 Currently, this file is hard-coded to datasets that have been downloaded and processed on a particular machine.  There are several other normalization and weighting decisions built
 into the uploaded HPO to gene graph that are not talked about here.  For more information, refer to the source code or email jholt@hudsonalpha.org.
 
-## Software Requirements
-1. Python - developed and tested using Python 2.7.12.
-2. Python packages - numpy, scipy
+## HPO Server
+The application.py file contains the information needed to set up a basic server for entering HPO terms and getting back rankings.  It has the following additional requirements:
+1. Flask - an easy to use python web server; ```pip install pronto```
+2. pronto - an ontology parser; ```pip install pronto```
+
+Once the pre-requisites are installed, simply run ```python application.py``` and navigate to [http://127.0.0.1:5000/search](http://127.0.0.1:5000/search) to access the GUI.  This will return a JSON
+output that can also be accessed programmatically via [http://127.0.0.1:5000/rank](http://127.0.0.1:5000/rank).
