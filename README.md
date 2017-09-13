@@ -62,7 +62,7 @@ into the uploaded HPO to gene graph that are not talked about here.  For more in
 
 ## HPO Server
 The application.py file contains the information needed to set up a basic server for entering HPO terms and getting back rankings.  It has the following additional requirements:
-1. Flask - an easy to use python web server; ```pip install pronto```
+1. Flask - an easy to use python web server; ```pip install Flask```
 2. pronto - an ontology parser; ```pip install pronto```
 
 Once the pre-requisites are installed, simply run ```python application.py``` and navigate to [http://127.0.0.1:5000/search](http://127.0.0.1:5000/search) to access the GUI.  This will return a JSON
