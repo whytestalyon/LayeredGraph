@@ -680,9 +680,13 @@ def rankCase(mg):
     
     #udn case 43
     #cleft palate, congenital hip dysplasia, muscle weakness, increase muscle fatigue, scoliosis, club feet, hypotonia, hypertonia, short stature, muscle hypoplasia, triangular face, brachycephaly, cupped ears, webbed neck, axillary pterygia, pectus excavatum, narrow chest, hypoplastic labia majora
-    hpoTerms = set(['HP:0000175', 'HP:0001385', 'HP:0001324', 'HP:0003750', 'HP:0002650', 'HP:0001762', 'HP:0001290', 'HP:0001276', 'HP:0004322', 'HP:0009004', 'HP:0000325', 'HP:0000248', 'HP:0000378', 'HP:0000465', 'HP:0001060', 'HP:0000767', 'HP:0000774', 'HP:0000059'])
+    #hpoTerms = set(['HP:0000175', 'HP:0001385', 'HP:0001324', 'HP:0003750', 'HP:0002650', 'HP:0001762', 'HP:0001290', 'HP:0001276', 'HP:0004322', 'HP:0009004', 'HP:0000325', 'HP:0000248', 'HP:0000378', 'HP:0000465', 'HP:0001060', 'HP:0000767', 'HP:0000774', 'HP:0000059'])
     #jsonDump = '/Users/matt/Downloads/probando_uno_results.json'
-    jsonDump = '/Users/matt/Downloads/SL154670_results.json'
+    #jsonDump = '/Users/matt/Downloads/SL154670_results.json'
+    
+    #udn case 3
+    hpoTerms = set(["HP:0001802", "HP:0002902", "HP:0002900", "HP:0001857", "HP:0002164", "HP:0001510", "HP:0011968", "HP:0005707"])
+    jsonDump = '/Users/matt/Downloads/SL126748_results.json'
     
     #primary data
     hpoWeights = pickle.load(open('/Users/matt/data/HPO_dl/multiHpoWeight_biogrid_pushup.pickle', 'r'))
