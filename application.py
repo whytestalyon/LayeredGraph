@@ -51,7 +51,7 @@ def rank():
     mg, restartProb, hpoWeights, bg = getMultigraphVars()
     
     #TODO: make this actually work
-    hpoTerms = set(request.form.getlist('term[]'))
+    hpoTerms = set([str(x) for x in request.form.getlist('term[]')])
     #startProbs = {('HPO', h) : hpoWeights[h] for h in hpoTerms}
     startProbs = {}
     usedTerms = set([])
@@ -66,15 +66,22 @@ def rank():
     rankTypes = set(['gene'])
     rankedGenes = mg.RWR_rank(startProbs, restartProb, rankTypes, bg)
     
-    rankings = []
-    for w, t, l in rankedGenes:
-        rankings.append({'weight':w, 'nodeType':t, 'label':l})
-    
-    ret = {'rankings': rankings,
-           'usedTerms': list(usedTerms),
-           'missingTerms': list(missingTerms)}
-    
-    return jsonify(ret)
+    if request.form['action'] == 'JSON':
+        rankings = []
+        for w, t, l in rankedGenes:
+            rankings.append({'weight':w, 'nodeType':t, 'label':l})
+        
+        ret = {'rankings': rankings,
+               'usedTerms': list(usedTerms),
+               'missingTerms': list(missingTerms)}
+        
+        return jsonify(ret)
+    else:
+        ret = 'Used: '+str(usedTerms)+'<br>'
+        ret += 'Missing: '+str(missingTerms)+'<br><br>'
+        for i, (w, t, l) in enumerate(rankedGenes[0:20]):
+            ret += ' '.join([str(x) for x in (i, w, t, l)])+'<br>'
+        return ret
     
 def getMultigraphVars():
     '''
