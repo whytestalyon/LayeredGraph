@@ -190,7 +190,7 @@ class LayeredGraph:
             x += 1
         
         #if we include background values, subtract them out to normalize the data
-        if bg != None:
+        if not (bg is None):
             currentProbs -= bg
         
         #now rank everything and only return values that are in the return set
