@@ -14,12 +14,6 @@ from HPOParser import getTermsAndSyns
 
 app = Flask(__name__)
 
-@app.route('/')
-def hello_world():
-    ret = 'Hello, World!'
-    ret += '\n'+str(mg)
-    return ret
-
 @app.route('/background')
 def background():
     '''
@@ -27,7 +21,7 @@ def background():
     '''
     #primary data
     mg = getMultigraphVars()
-    hpoWeights = pickle.load(open('/Users/matt/data/HPO_dl/multiHpoWeight_biogrid_pushup.pickle', 'r'))
+    hpoWeights = pickle.load(open('./HPO_graph_data/multiHpoWeight_biogrid_pushup.pickle', 'r'))
     restartProb = 0.1
     
     #background calculation
@@ -37,9 +31,10 @@ def background():
     
     return jsonify(bg)
 
+@app.route('/')
 @app.route('/search')
 def search():
-    terms = getTermsAndSyns('/Users/matt/data/HPO_dl/hp.obo')
+    terms = getTermsAndSyns('./HPO_graph_data/hp.obo')
     return render_template('search.html', terms=terms)
 
 @app.route('/rank', methods=['POST'])
@@ -91,7 +86,7 @@ def getMultigraphVars():
     '''
     if not hasattr(g, 'mg'):
         #load or generate the graph
-        pickleGraphFN = '/Users/matt/data/HPO_dl/multigraph.pickle'
+        pickleGraphFN = './HPO_graph_data/multigraph.pickle'
         print 'Loading from "'+pickleGraphFN+'"'
         
         #these are variable that need to be set for multiple uses
@@ -101,7 +96,7 @@ def getMultigraphVars():
         g.restartProb = 0.1
     
     if not hasattr(g, 'hpoWeights'):
-        g.hpoWeights = pickle.load(open('/Users/matt/data/HPO_dl/multiHpoWeight_biogrid_pushup.pickle', 'r'))
+        g.hpoWeights = pickle.load(open('./HPO_graph_data/multiHpoWeight_biogrid_pushup.pickle', 'r'))
     
     if not hasattr(g, 'bg'):
         bgProbs = {('HPO', h) : g.hpoWeights[h] for h in g.mg.nodes['HPO']}
