@@ -4,23 +4,26 @@ import json
 import numpy as np
 import os
 #import pickle
-import cPickle as pickle
+import pickle as pickle
 import time
 
 import LayeredGraph
 
-def createNewLayeredGraph(includeDisease, includeCPDB, includeOmnipath):
+def createNewLayeredGraph(hpoPhenoToGenoFN, graphStructureFN, includeDisease, includeCPDB, includeOmnipath):
+    '''
+    TODO
+    '''
     #static files we will be using
-    hpoPhenoToGenoFN = '/Users/matt/data/HPO_dl/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt'
-    graphStructureFN = '/Users/matt/data/HPO_dl/hp.obo'
+    #hpoPhenoToGenoFN = '/Users/matt/data/HPO_dl/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt'
+    #graphStructureFN = '/Users/matt/data/HPO_dl/hp.obo'
     
     #parameters for how the graph generation should be handled
     PUSHUP = True
     
     #first, load in the phenotype to gene mappings
-    print 'Loading HPO to gene information...'
+    print('Loading HPO to gene information...')
     p2g = loadPhenoToGeno(hpoPhenoToGenoFN)
-    print len(p2g), 'p2g associations'
+    print(len(p2g), 'p2g associations')
     
     #second, build a graph
     nodes, edges, altIDMap = loadGraphStructure(graphStructureFN)
@@ -39,25 +42,21 @@ def createNewLayeredGraph(includeDisease, includeCPDB, includeOmnipath):
     if PUSHUP:
         p2g = pushP2gUp(p2g, nodes, edges)
     
-    #g2g = []
-    #print len(g2g), 'g2g interactions loaded'
-    #print
-    
     if includeDisease:
         d2p = loadDiseaseToPheno()
-        print len(d2p), 'd2p interactions loaded'
+        print(len(d2p), 'd2p interactions loaded')
     else:
         d2p = []
     
     if includeCPDB:
         cpdb = loadCPDB()
-        print len(cpdb), 'pathways loaded'
+        print(len(cpdb), 'pathways loaded')
     else:
         cpdb = []
         
     if includeOmnipath:
         prots, protEdges, prot2gene = loadOmnipath()
-        print len(protEdges), 'omnipath interactions loaded'
+        print(len(protEdges), 'omnipath interactions loaded')
     else:
         prots, protEdges, prot2gene = set([]), set([]), {}
     
@@ -65,11 +64,11 @@ def createNewLayeredGraph(includeDisease, includeCPDB, includeOmnipath):
     mg = LayeredGraph.LayeredGraph()
     
     #add all of our nodes to the graph
-    print 'Adding HPO nodes...'
+    print('Adding HPO nodes...')
     for n in nodes:
         mg.addNode('HPO', n)
     
-    print 'Adding gene nodes...'
+    print('Adding gene nodes...')
     geneSet = set([])
     for p in p2g:
         geneSet |= p2g[p]
@@ -77,30 +76,30 @@ def createNewLayeredGraph(includeDisease, includeCPDB, includeOmnipath):
         mg.addNode('gene', g)
     
     if includeDisease:
-        print 'Adding disease nodes...'
+        print('Adding disease nodes...')
         #here is where we would add disease nodes
         for d, p in d2p:
             mg.addNode('disease', d)
     
     if includeCPDB:
-        print 'Adding pathway nodes...'
+        print('Adding pathway nodes...')
         for pathwayID, geneList in cpdb:
             mg.addNode('pathway', pathwayID)
     
     if includeOmnipath:
-        print 'Adding protein nodes...'
+        print('Adding protein nodes...')
         for prot in prots:
             mg.addNode('protein', prot)
         
-        for prot in prot2gene.keys():
+        for prot in list(prot2gene.keys()):
             mg.addNode('protein', prot)
     
     #all nodes are in now
     mg.finalizeNodeList()
     
     #add all of our edges to the graph
-    print 'Adding HPO edges...'
-    for parent in edges.keys():
+    print('Adding HPO edges...')
+    for parent in list(edges.keys()):
         for child in edges[parent]:
             #first method, all edges have constant weight
             #mg.addEdge('HPO', parent, 'HPO', child, 1, True)
@@ -109,7 +108,7 @@ def createNewLayeredGraph(includeDisease, includeCPDB, includeOmnipath):
             similarity = len(p2g.get(parent, set([])) & p2g.get(child, set([])))
             mg.addEdge('HPO', parent, 'HPO', child, similarity+1, True)
     
-    print 'Adding p2g edges...'
+    print('Adding p2g edges...')
     for p in p2g:
         for g in p2g[p]:
             #first method, all edges have constant weight
@@ -119,33 +118,33 @@ def createNewLayeredGraph(includeDisease, includeCPDB, includeOmnipath):
             mg.addEdge('HPO', p, 'gene', g, 2, False)
     
     if includeDisease:
-        print 'Adding d2p edges...'
+        print('Adding d2p edges...')
         for d, p in d2p:
             mg.addEdge('disease', d, 'HPO', p, 1, True)
     
     if includeCPDB:
-        print 'Adding self edges on genes...'
+        print('Adding self edges on genes...')
         for g in geneSet:
             mg.addEdge('gene', g, 'gene', g, 1, False)
             
-        print 'Adding cpdb edges...'
+        print('Adding cpdb edges...')
         for pathwayID, geneList in cpdb:
             for g in geneList:
                 if g in geneSet:
                     mg.addEdge('gene', g, 'pathway', pathwayID, 1, True)
     
     if includeOmnipath:
-        print 'Adding self edges on genes...'
+        print('Adding self edges on genes...')
         for g in geneSet:
             mg.addEdge('gene', g, 'gene', g, 1, False)
         
-        print 'Adding gene to protein edges...'
+        print('Adding gene to protein edges...')
         for prot in prot2gene:
             for g in prot2gene[prot]:
                 if g in geneSet:
                     mg.addEdge('gene', g, 'protein', prot, 1, True)
         
-        print 'Adding PPI...'
+        print('Adding PPI...')
         for source, dest in protEdges:
             mg.addEdge('protein', source, 'protein', dest, 1, False)
     
@@ -153,10 +152,44 @@ def createNewLayeredGraph(includeDisease, includeCPDB, includeOmnipath):
     #print 'Setting graph jump equal...'
     mg.setGraphJumpEqual()
     
-    print 'Calculating final transition matrix...'
+    print('Calculating final transition matrix...')
     mg.calculateTransitionMatrix()
     
     return mg
+
+def createHPOWeights(hpoPhenoToGenoFN, graphStructureFN):
+    #static files we will be using
+    #hpoPhenoToGenoFN = '/Users/matt/data/HPO_dl/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt'
+    #graphStructureFN = '/Users/matt/data/HPO_dl/hp.obo'
+    
+    #parameters for how the graph generation should be handled
+    PUSHUP = True
+    
+    #first, load in the phenotype to gene mappings
+    print('Loading HPO to gene information...')
+    p2g = loadPhenoToGeno(hpoPhenoToGenoFN)
+    print(len(p2g), 'p2g associations')
+    
+    #second, build a graph
+    nodes, edges, altIDMap = loadGraphStructure(graphStructureFN)
+    
+    #make sure anything in p2g is stored as the main ID
+    for k in p2g:
+        assert(k not in altIDMap)
+    
+    #make sure all our edges only use main IDs also
+    for source in edges:
+        assert(source not in altIDMap)
+        for dest in edges[source]:
+            assert(dest not in altIDMap)
+    
+    #push all p2g info up
+    if PUSHUP:
+        p2g = pushP2gUp(p2g, nodes, edges)
+    
+    #HPO graph is fully loaded, now we can calculate weights
+    hpoScores = calculateHpoScores(nodes, edges)
+    return hpoScores
 
 def loadPhenoToGeno(fn):
     '''
@@ -175,7 +208,7 @@ def loadPhenoToGeno(fn):
         hpo = pieces[0]
         geneName = pieces[3]
         
-        if not ret.has_key(hpo):
+        if hpo not in ret:
             ret[hpo] = set([geneName])
         else:
             ret[hpo].add(geneName)
@@ -214,7 +247,7 @@ def loadGraphStructure(fn):
             elif l[0:6] == 'is_a: ':
                 assert(nodeID != None)
                 parentID = l[6:16]
-                if edges.has_key(parentID):
+                if parentID in edges:
                     edges[parentID].add(nodeID)
                 else:
                     edges[parentID] = set([nodeID])
@@ -241,7 +274,7 @@ def pushP2gUp(p2g, nodes, edges):
     @param edges - the set of edges where key is the parent node in the HPO graph and the value is a set of children
     @return - a modified p2g that pushes all phenotype info full up the tree
     '''
-    print 'Running pushP2gUp(...)'
+    print('Running pushP2gUp(...)')
     analyzed = set([])
     rootNode = 'HP:0000001'
     stack = [rootNode]
@@ -261,6 +294,79 @@ def pushP2gUp(p2g, nodes, edges):
             analyzed.add(currNode)
     
     return p2g
+
+def calculateHpoScores(nodes, edges):
+    '''
+    This function calculates a weighting for each HPO term based on its depth in the ontology and the number of leaves it has stemming from it with the
+    goal of giving higher weight to more specific terms (i.e. lower in the ontology).
+    @param nodes - the HPO nodes
+    @param edges - the HPO edges
+    @return - a dictionary from HPO node to a weight
+    '''
+    leafDict = {}
+    subsumerDict = {}
+    
+    analyzed = set([])
+    rootNode = 'HP:0000001'
+    stack = [rootNode]
+    
+    while len(stack) > 0:
+        currNode = stack[-1]
+        for end in edges.get(currNode, set([])):
+            if end not in analyzed:
+                stack.append(end)
+        
+        if currNode == stack[-1]:
+            #nothing was added
+            #x = len(p2g.get(currNode, set([])))
+            #for end in edges.get(currNode, set([])):
+            #    p2g[currNode] = p2g.get(currNode, set([])) | p2g.get(end, set([]))
+            leaves = set([])
+            if len(edges.get(currNode, set([]))) == 0:
+                #no children, so it is a leaf node
+                leaves.add(currNode)
+            else:
+                #it has children, collect all of its children's leaves
+                for end in edges.get(currNode, set([])):
+                    leaves = leaves | leafDict[end]
+            
+            #store, pop, and mark as analyzed
+            leafDict[currNode] = leaves
+            stack.pop()
+            analyzed.add(currNode)
+    
+    parents = {}
+    for source in edges:
+        for dest in edges[source]:
+            if dest not in parents:
+                parents[dest] = set([])
+            parents[dest].add(source)
+    
+    analyzed = set([])
+    queue = sorted(nodes)
+    while len(queue) > 0:
+        currNode = queue[0]
+        for par in parents.get(currNode, set([])):
+            if par not in analyzed:
+                queue.append(queue.pop(0))
+                break
+        
+        if currNode == queue[0]:
+            subsume = set([currNode])
+            for parent in parents.get(currNode, set([])):
+                subsume = subsume | parents.get(parent, set([]))
+            
+            #store, pop, and mark as analyzed
+            subsumerDict[currNode] = subsume
+            queue.pop(0)
+            analyzed.add(currNode)
+    
+    leafCounts = [len(leafDict.get(k, [k])) for k in sorted(nodes)]
+    subsumCounts = [len(subsumerDict[k]) for k in sorted(nodes)]
+    maxLeaves = max(leafCounts)
+    
+    hpoScores = {k: np.exp(np.log(subsumCounts[x])+np.log(maxLeaves)-np.log(leafCounts[x])) for x, k in enumerate(sorted(nodes))}
+    return hpoScores
 
 def loadDiseaseToPheno():
     '''
@@ -307,7 +413,7 @@ def loadCPDB():
         
     fp.close()
     
-    print 'sources: '+str(sources)
+    print('sources: '+str(sources))
     return ret
 
 def loadOmnipath():
@@ -468,7 +574,7 @@ def runTests(mg):
         if len(hpoTerms) == 0 or len(geneSearch) == 0:
             continue
         
-        print hpoTerms
+        print(hpoTerms)
         #startProbs = {('HPO', h) : 1.0 for h in hpoTerms}
         startProbs = {('HPO', h) : hpoWeights[h] for h in hpoTerms}
         #print startProbs
@@ -478,7 +584,7 @@ def runTests(mg):
         
         #second, check the rank of genes in the diffusion
         for gene in geneSearch:
-            for x in xrange(0, len(rankedGenes)):
+            for x in range(0, len(rankedGenes)):
                 if rankedGenes[x][2] == gene:
                     w = rankedGenes[x][0]
                     r = x
@@ -494,15 +600,15 @@ def runTests(mg):
             finalRank = (l+h)/2
                 
             ranks.append(finalRank)
-            print gene+' ranked '+str(finalRank)
-        print
+            print(gene+' ranked '+str(finalRank))
+        print()
         
-    print 'Ranks\t'+str(ranks)
-    print 'Total_rank\t'+str(np.sum(ranks))
-    print 'Mean_rank\t'+str(np.mean(ranks))+' ('+str(np.mean(np.log(np.array(ranks)+1)))+')'
-    print 'Min_rank\t'+str(np.min(ranks))
-    print 'Max_rank\t'+str(np.max(ranks))
-    print
+    print('Ranks\t'+str(ranks))
+    print('Total_rank\t'+str(np.sum(ranks)))
+    print('Mean_rank\t'+str(np.mean(ranks))+' ('+str(np.mean(np.log(np.array(ranks)+1)))+')')
+    print('Min_rank\t'+str(np.min(ranks)))
+    print('Max_rank\t'+str(np.max(ranks)))
+    print()
 
 def loadCasesFromMana():
     HPOFiles = glob.glob('/Users/matt/Downloads/4matt-udn-cases/*/HPO_input.txt')
@@ -531,14 +637,14 @@ def loadCasesFromMana():
         classification = pieces[11]
         
         if classification == 'primary':
-            if caseToGenes.has_key(caseLabel):
+            if caseLabel in caseToGenes:
                 caseToGenes[caseLabel].add(geneLabel)
             else:
                 caseToGenes[caseLabel] = set([geneLabel])
     fp.close()
     
     retCases = []
-    for k in caseToHPO.keys():
+    for k in list(caseToHPO.keys()):
         if k in caseToGenes:
             retCases.append((list(caseToHPO[k]), list(caseToGenes[k])))
     
@@ -573,7 +679,7 @@ def testRankings(mg):
             if gene in codiRank:
                 codiScore = codiRank.index(gene)
                 monarchScore = (len(codiRank)-1+len(monarchRank))/2
-                for x in xrange(0, len(monarchRank)):
+                for x in range(0, len(monarchRank)):
                     if monarchRank[x][1] == gene:
                         w = monarchRank[x][0]
                         r = x
@@ -589,7 +695,7 @@ def testRankings(mg):
                         break
                 
                 graphScore = (len(codiRank)-1+len(graphWeights))/2
-                for x in xrange(0, len(graphWeights)):
+                for x in range(0, len(graphWeights)):
                     if graphWeights[x][1] == gene:
                         w = graphWeights[x][0]
                         r = x
@@ -604,7 +710,7 @@ def testRankings(mg):
                         graphScore = (l+h)/2
                         break
                 
-                print '\t'.join(str(v) for v in [caseLabel, ';'.join(hpoTerms), gene, codiScore, monarchScore, graphScore])
+                print('\t'.join(str(v) for v in [caseLabel, ';'.join(hpoTerms), gene, codiScore, monarchScore, graphScore]))
             else:
                 #for some reason, this gene isn't in the codi ranking
                 pass
@@ -624,7 +730,7 @@ def rankCasesFromMana():
         classification = pieces[11]
         
         if classification == 'primary':
-            if caseToGenes.has_key(caseLabel):
+            if caseLabel in caseToGenes:
                 caseToGenes[caseLabel].add(geneLabel)
             else:
                 caseToGenes[caseLabel] = set([geneLabel])
@@ -634,7 +740,7 @@ def rankCasesFromMana():
     for cd in caseDirectories:
         caseLabel = cd.split('/')[-2]
         if len(caseToGenes.get(caseLabel, [])) == 0:
-            print 'no genes returned for '+caseLabel
+            print('no genes returned for '+caseLabel)
             continue
         
         #get all HPO terms for the case
@@ -678,18 +784,38 @@ def rankCase(mg):
     #failure to thrive
     #hpoTerms = set(['HP:0001508'])
     
+    #udn case 2
+    #hpoTerms = set(['HP:0000846', 'HP:0000252', 'HP:0000826', 'HP:0002444', 'HP:0000824', 'HP:0002902', 'HP:0001250', 'HP:0007165', 'HP:0000871'])
+    #jsonDump = '/Users/matt/Downloads/SL126745_results.json'
+    
+    #udn case 15
+    #hpoTerms = set(['HP:0002307', 'HP:0002141', 'HP:0002046', 'HP:0007286', 'HP:0001621', 'HP:0000722', 'HP:0000649', 'HP:0001268', 'HP:0012171', 'HP:0001152', 'HP:0002371', 'HP:0002376', 'HP:0002355', 'HP:0007089', 'HP:0002193', 'HP:0000020', 'HP:0002607', 'HP:0010845', 'HP:0006895', 'HP:0000651', 'HP:0200085', 'HP:0002015', 'HP:0000713', 'HP:0001290', 'HP:0011448', 'HP:0025121', 'HP:0001272', 'HP:0000565', 'HP:0001347'])
+    #jsonDump = '/Users/matt/Downloads/SL139131_results.json'
+    
+    #udn case 24
+    #hpoTerms = set(['HP:0000501', 'HP:0004322', 'HP:0000511', 'HP:0000648', 'HP:0200055', 'HP:0012385', 'HP:0001315', 'HP:0010498', 'HP:0001264', 'HP:0001263', 'HP:0012157', 'HP:0007340', 'HP:0003701', 'HP:0000252', 'HP:0000316', 'HP:0000358', 'HP:0007936', 'HP:0001773', 'HP:0003693', 'HP:0001290', 'HP:0000826', 'HP:0001007', 'HP:0005616', 'HP:0000486', 'HP:0001385', 'HP:0002650'])
+    #jsonDump = '/Users/matt/Downloads/SL143666_results.json'
+    
     #udn case 43
     #cleft palate, congenital hip dysplasia, muscle weakness, increase muscle fatigue, scoliosis, club feet, hypotonia, hypertonia, short stature, muscle hypoplasia, triangular face, brachycephaly, cupped ears, webbed neck, axillary pterygia, pectus excavatum, narrow chest, hypoplastic labia majora
     #hpoTerms = set(['HP:0000175', 'HP:0001385', 'HP:0001324', 'HP:0003750', 'HP:0002650', 'HP:0001762', 'HP:0001290', 'HP:0001276', 'HP:0004322', 'HP:0009004', 'HP:0000325', 'HP:0000248', 'HP:0000378', 'HP:0000465', 'HP:0001060', 'HP:0000767', 'HP:0000774', 'HP:0000059'])
     #jsonDump = '/Users/matt/Downloads/probando_uno_results.json'
     #jsonDump = '/Users/matt/Downloads/SL154670_results.json'
     
-    #udn case 3
-    hpoTerms = set(["HP:0001802", "HP:0002902", "HP:0002900", "HP:0001857", "HP:0002164", "HP:0001510", "HP:0011968", "HP:0005707"])
-    jsonDump = '/Users/matt/Downloads/SL126748_results.json'
+    #udn case 44
+    #hpoTerms = set(['HP:0006610', 'HP:0000028', 'HP:0030084', 'HP:0010878', 'HP:0000954', 'HP:0000311', 'HP:0001537', 'HP:0001263', 'HP:0001265', 'HP:0002786', 'HP:0011451', 'HP:0000363', 'HP:0001276', 'HP:0000286', 'HP:0002421', 'HP:0002870', 'HP:0010720', 'HP:0100704', 'HP:0008872', 'HP:0000340', 'HP:0002360'])
+    #jsonDump = '/Users/matt/Downloads/SL154671_results.json'
+    
+    #udn case 49
+    #hpoTerms = set(['HP:0003691', 'HP:0000020', 'HP:0002607', 'HP:0011098', 'HP:0001250', 'HP:0000717', 'HP:0003323'])
+    #jsonDump = '/Users/matt/Downloads/SL156321_results.json'
+    
+    #udn case 107
+    hpoTerms = set(['HP:0000975', 'HP:0001290', 'HP:0000252', 'HP:0002079', 'HP:0001324', 'HP:0001263', 'HP:0004712', 'HP:0001321', 'HP:0002028', 'HP:0001508', 'HP:0001250', 'HP:0002650', 'HP:0002020', 'HP:0003128', 'HP:0003198'])
+    jsonDump = '/Users/matt/Downloads/SL219796_results.json'
     
     #primary data
-    hpoWeights = pickle.load(open('/Users/matt/data/HPO_dl/multiHpoWeight_biogrid_pushup.pickle', 'r'))
+    hpoWeights = pickle.load(open('/Users/matt/data/HPO_dl/multiHpoWeight_biogrid_pushup.pickle', 'rb'))
     startProbs = {('HPO', h) : hpoWeights[h] for h in hpoTerms}
     restartProb = 0.1
     
@@ -702,17 +828,17 @@ def rankCase(mg):
     
     rankedGenes = mg.RWR_rank(startProbs, restartProb, rankTypes, bg)
     
-    print 'Raw gene list:'
+    print('Raw gene list:')
     for i, (w, l, g) in enumerate(rankedGenes[0:20]):
-        print i, w, l, g
-    print
+        print(i, w, l, g)
+    print()
     
     codiGenes = getCodiGenes(jsonDump)
-    print 'Codi gene list:'
+    print('Codi gene list:')
     count = 0
     for i, (w, l, g) in enumerate(rankedGenes):
         if g in codiGenes:
-            print count, w, l, g
+            print(count, w, l, g)
             count += 1
             if count >= 20:
                 break
@@ -729,29 +855,49 @@ def getCodiGenes(jsonDump):
     return ret
     
 if __name__ == '__main__':
+    #static files we will be using
+    hpoPhenoToGenoFN = '/Users/matt/data/HPO_dl/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt'
+    graphStructureFN = '/Users/matt/data/HPO_dl/hp.obo'
+    
+    #output files
+    REGENERATE = False
     pickleGraphFN = '/Users/matt/data/HPO_dl/multigraph.pickle'
+    pickleHPOWeightFN = '/Users/matt/data/HPO_dl/multiHpoWeight_biogrid_pushup.pickle'
     
     #load or generate the graph
-    if True and os.path.exists(pickleGraphFN):
-        print 'Loading from "'+pickleGraphFN+'"'
-        mg = pickle.load(open(pickleGraphFN, 'r'))
+    if (not REGENERATE) and os.path.exists(pickleGraphFN):
+        print('Loading from "'+pickleGraphFN+'"')
+        mg = pickle.load(open(pickleGraphFN, 'rb'))
     else:
-        print 'Generating new LayeredGraph'
+        print('Generating new LayeredGraph')
         includeDisease, includeCPDB, includeOmnipath = False, False, False
-        mg = createNewLayeredGraph(includeDisease, includeCPDB, includeOmnipath)
+        mg = createNewLayeredGraph(hpoPhenoToGenoFN, graphStructureFN, includeDisease, includeCPDB, includeOmnipath)
         
-        print 'Pickling...'
-        fp = open(pickleGraphFN, 'w+')
+        print('Pickling...')
+        fp = open(pickleGraphFN, 'wb+')
         pickle.dump(mg, fp)
         fp.close()
     
+    #load or generate the HPO weights
+    if (not REGENERATE) and os.path.exists(pickleHPOWeightFN):
+        print('Loading from "'+pickleHPOWeightFN+'"')
+        hpoWeights = pickle.load(open(pickleHPOWeightFN, 'rb'))
+    else:
+        print('Generate new HPO weights')
+        hpoWeights = createHPOWeights(hpoPhenoToGenoFN, graphStructureFN)
+        
+        print('Pickling...')
+        fp = open(pickleHPOWeightFN, 'wb+')
+        pickle.dump(hpoWeights, fp)
+        fp.close()
+    
     #now run our tests
-    print mg
+    print(mg)
     #'''
     initNodes = {('HPO', 'HP:0003002'): 1.0}
     restartProb = .1
     retSet = set(['HPO', 'gene'])
-    print mg.RWR_rank(initNodes, restartProb, retSet)[0:10]
+    print(mg.RWR_rank(initNodes, restartProb, retSet)[0:10])
     #'''
     '''
     st = time.time()
