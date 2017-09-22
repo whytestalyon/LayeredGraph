@@ -11,12 +11,14 @@ import LayeredGraph
 
 def createNewLayeredGraph(hpoPhenoToGenoFN, graphStructureFN, includeDisease, includeCPDB, includeOmnipath):
     '''
-    TODO
+    This function will create an the graph we use for HPO term to gene
+    @param hpoPhenoToGenoFN - the file containing relationships between phenotypes and genotype; typically ./HPO_dl/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt
+    @param graphStructureFN - the OBO file from HPO; typically ./HPO_dl/hp.obo
+    @param includeDisease - if True, add disease layer to graph and connect it to phenotypes (from HPO)
+    @param includeCPDB - if True, add pathway layer to graph and connect it to genes (from CPDB)
+    @param includeOmnipath - if True, add gene-to-gene interactions based on protein-to-gene relationships (from Omnipath)
+    @return - an instance of LayeredGraph containing the constructed graph
     '''
-    #static files we will be using
-    #hpoPhenoToGenoFN = '/Users/matt/data/HPO_dl/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt'
-    #graphStructureFN = '/Users/matt/data/HPO_dl/hp.obo'
-    
     #parameters for how the graph generation should be handled
     PUSHUP = True
     
@@ -158,10 +160,12 @@ def createNewLayeredGraph(hpoPhenoToGenoFN, graphStructureFN, includeDisease, in
     return mg
 
 def createHPOWeights(hpoPhenoToGenoFN, graphStructureFN):
-    #static files we will be using
-    #hpoPhenoToGenoFN = '/Users/matt/data/HPO_dl/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt'
-    #graphStructureFN = '/Users/matt/data/HPO_dl/hp.obo'
-    
+    '''
+    This function will create weights for each HPO term
+    @param hpoPhenoToGenoFN - the file containing relationships between phenotypes and genotype; typically ./HPO_dl/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt
+    @param graphStructureFN - the OBO file from HPO; typically ./HPO_dl/hp.obo
+    @return - a dictionary where key is an HPO term and value is the weight for that term based on the calculation
+    '''
     #parameters for how the graph generation should be handled
     PUSHUP = True
     
@@ -297,11 +301,11 @@ def pushP2gUp(p2g, nodes, edges):
 
 def calculateHpoScores(nodes, edges):
     '''
-    This function calculates a weighting for each HPO term based on its depth in the ontology and the number of leaves it has stemming from it with the
-    goal of giving higher weight to more specific terms (i.e. lower in the ontology).
-    @param nodes - the HPO nodes
-    @param edges - the HPO edges
-    @return - a dictionary from HPO node to a weight
+    This function will actually calculate the HPO weights based on their placement in the HPO ontology.  In general, terms closer to the root will have a lower weight
+    than those near the leaves.  This is intended to reflect how some terms are more specific than others and should be given higher weights.
+    @param nodes - the nodes (aka, HPO terms) from the HPO ontology
+    @param edges - the edges connecting HPO terms in the ontology
+    @return - a dictionary where key is an HPO term and value is the weight for that term based on the calculation
     '''
     leafDict = {}
     subsumerDict = {}
@@ -517,7 +521,6 @@ def loadProteinToEns(fn):
 
 def condenseProt2Gene(p2e, e2g):
     ret = {}
-    
     for prot in p2e:
         ensList = p2e[prot]
         
@@ -528,10 +531,6 @@ def condenseProt2Gene(p2e, e2g):
         
         if len(geneSet) > 0:
             ret[prot] = list(geneSet)
-        '''
-        if len(geneSet) > 1:
-            print prot, geneSet
-        '''
     return ret
 
 def runTests(mg):
