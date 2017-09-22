@@ -19,7 +19,7 @@ class LayeredGraph:
         @param nodeType - the node type (i.e. sub-graph label)
         @param nodeName - the label of the node in its subgraph
         '''
-        if not self.nodes.has_key(nodeType):
+        if nodeType not in self.nodes:
             self.nodes[nodeType] = set([])
         self.nodes[nodeType].add(nodeName)
     
@@ -74,9 +74,9 @@ class LayeredGraph:
         is handled in the ranking algorithm.
         '''
         self.uniformGraph = False
-        for nt in self.nodes.keys():
-            for nt2 in self.nodes.keys():
-                self.typeTransProbs[(nt, nt2)] = 1.0/len(self.nodes.keys())
+        for nt in list(self.nodes.keys()):
+            for nt2 in list(self.nodes.keys()):
+                self.typeTransProbs[(nt, nt2)] = 1.0/len(list(self.nodes.keys()))
     
     def calculateTransitionMatrix(self):
         '''
@@ -125,7 +125,7 @@ class LayeredGraph:
         a value for EVERY (node type, node type) pair.
         '''
         #we have to handle each source (column) separately because we cannot guarantee edges always exist
-        for ci in xrange(0, self.transitionProbs.shape[0]):
+        for ci in range(0, self.transitionProbs.shape[0]):
             st = self.nodeOrdered[ci][0]
             
             #go through and pull out transition probabilities if it's not empty
@@ -167,7 +167,7 @@ class LayeredGraph:
         
         #create the initial probabilities (based on a restart)
         currentProbs = np.zeros(shape=(self.transitionProbs.shape[0], ), dtype='float')
-        for k in startProbs.keys():
+        for k in list(startProbs.keys()):
             currentProbs[self.nodeIndex[k]] = startProbs[k]
         currentProbs /= np.sum(currentProbs)
         initProbs = np.copy(currentProbs)
@@ -218,7 +218,7 @@ class LayeredGraph:
         
         #create the initial probabilities (based on a restart)
         currentProbs = np.zeros(shape=(self.transitionProbs.shape[0], ), dtype='float')
-        for k in startProbs.keys():
+        for k in list(startProbs.keys()):
             currentProbs[self.nodeIndex[k]] = startProbs[k]
         currentProbs /= np.sum(currentProbs)
         initProbs = np.copy(currentProbs)
@@ -266,11 +266,11 @@ if __name__ == '__main__':
     mg.calculateTransitionMatrix()
     
     ranks = mg.RWR_rank({('t1', 'n1'): 1.0, ('t1', 'n2'): 1.0}, 0.1, set(['t2', 't3']))
-    print ranks
+    print(ranks)
     
-    import cPickle as pickle
+    import pickle as pickle
     mg2 = pickle.loads(pickle.dumps(mg))
-    print mg2.RWR_rank({('t1', 'n1'): 1.0, ('t1', 'n2'): 1.0}, 0.1, set(['t2', 't3']))
+    print(mg2.RWR_rank({('t1', 'n1'): 1.0, ('t1', 'n2'): 1.0}, 0.1, set(['t2', 't3'])))
     
     #'''
     '''

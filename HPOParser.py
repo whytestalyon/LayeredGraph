@@ -22,6 +22,6 @@ if __name__ == '__main__':
     hpoFN = '/Users/matt/data/HPO_dl/hp.obo'
     terms = getTermsAndSyns(hpoFN)
     for t, d in terms:
-        print t, d
+        print(t, d)
     
-    print str(len(terms))+' total elements'
+    print(str(len(terms))+' total elements')

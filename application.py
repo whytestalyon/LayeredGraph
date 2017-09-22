@@ -21,7 +21,7 @@ def background():
     '''
     #primary data
     mg = getMultigraphVars()
-    hpoWeights = pickle.load(open('./HPO_graph_data/multiHpoWeight_biogrid_pushup.pickle', 'r'))
+    hpoWeights = pickle.load(open('./HPO_graph_data/multiHpoWeight_biogrid_pushup.pickle', 'rb'))
     restartProb = 0.1
     
     #background calculation
@@ -52,7 +52,7 @@ def rank():
     usedTerms = set([])
     missingTerms = set([])
     for h in hpoTerms:
-        if hpoWeights.has_key(h):
+        if h in hpoWeights:
             startProbs[('HPO', h)] = hpoWeights[h]
             usedTerms.add(h)
         else:
@@ -87,16 +87,16 @@ def getMultigraphVars():
     if not hasattr(g, 'mg'):
         #load or generate the graph
         pickleGraphFN = './HPO_graph_data/multigraph.pickle'
-        print 'Loading from "'+pickleGraphFN+'"'
+        print('Loading from "'+pickleGraphFN+'"')
         
         #these are variable that need to be set for multiple uses
-        g.mg = pickle.load(open(pickleGraphFN, 'r'))
+        g.mg = pickle.load(open(pickleGraphFN, 'rb'))
     
     if not hasattr(g, 'restartProb'):
         g.restartProb = 0.1
     
     if not hasattr(g, 'hpoWeights'):
-        g.hpoWeights = pickle.load(open('./HPO_graph_data/multiHpoWeight_biogrid_pushup.pickle', 'r'))
+        g.hpoWeights = pickle.load(open('./HPO_graph_data/multiHpoWeight_biogrid_pushup.pickle', 'rb'))
     
     if not hasattr(g, 'bg'):
         bgProbs = {('HPO', h) : g.hpoWeights[h] for h in g.mg.nodes['HPO']}
