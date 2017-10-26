@@ -15,7 +15,7 @@
     </head>
     <body>
         <form action="/rank" method="post">
-            <select name="term[]" class="hpo-select" multiple="multiple" style="width: 50%">
+            <select name="term[]" class="hpo-select" multiple="multiple" style="width: 90%">
                 {% for t, l in terms %}
                     <option value="{{ t }}">{{ t }} - {{ l }}</option>
                 {% endfor %}

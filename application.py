@@ -73,6 +73,7 @@ def rank():
         return jsonify(ret)
     else:
         ret = 'Used: '+str(usedTerms)+'<br>'
+        ret += 'CSV-used: '+str(';'.join(sorted(usedTerms)))+'<br>'
         ret += 'Missing: '+str(missingTerms)+'<br><br>'
         for i, (w, t, l) in enumerate(rankedGenes[0:20]):
             ret += ' '.join([str(x) for x in (i, w, t, l)])+'<br>'
