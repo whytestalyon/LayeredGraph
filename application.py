@@ -111,6 +111,5 @@ if __name__ == "__main__":
     # removed before deploying a production app.
     
     #initializeLayeredGraph()
-    
-    app.debug = True
-    app.run()
+
+    app.run(debug=True, host='0.0.0.0')
