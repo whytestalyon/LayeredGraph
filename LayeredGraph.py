@@ -46,7 +46,6 @@ class LayeredGraph:
                 x += 1
         
         #this will be indexed by [source, dest]
-        #self.edgeWeights = np.zeros(shape=(x, x), dtype='float')
         self.edgeWeights = lil_matrix((x, x), dtype='float')
         
     def addEdge(self, st, sl, dt, dl, weight, isUndirected):
@@ -55,7 +54,7 @@ class LayeredGraph:
         @param st - source node type
         @param sl - source node label
         @param dt - destination node type
-        @param dl - destionation node label
+        @param dl - destination node label
         @param weight - the edge weight, use 1.0 if all edges are identical (i.e. unweighted)
         @param isUndirected - if True, both the described edge and its reverse will be added (source and dest are interchangeable)
         '''
@@ -66,6 +65,25 @@ class LayeredGraph:
         self.edgeWeights[sourceInd, destInd] = weight
         if isUndirected:
             self.edgeWeights[destInd, sourceInd] = weight
+        
+    def getEdge(self, st, sl, dt, dl, normalized=False):
+        '''
+        This function returns the weight on an edge in the graph
+        @param st - source node type
+        @param sl - source node label
+        @param dt - destination node type
+        @param dl - destination node label
+        @param normalized - if True, return the normalized weight value [0.0, 1.0] from the computation; if False, return the raw weight from the addEdge(...) function
+        @return - if the edge exists, the numerical weight value is returned; otherwise, this returns 0.0 to indicate an absent edge
+        '''
+        sourceInd = self.nodeIndex[(st, sl)]
+        destInd = self.nodeIndex[(dt, dl)]
+        if normalized:
+            #this matrix was transposed, so flip the index order
+            return self.transitionProbs[destInd, sourceInd]
+        else:
+            #raw weight values
+            return self.edgeWeights[sourceInd, destInd]
     
     def setGraphJumpEqual(self):
         '''
@@ -84,14 +102,11 @@ class LayeredGraph:
         the graph via addEdge(...).  
         '''
         #transition probs will be indexed by [dest, source] due to math reasons
-        #self.transitionProbs = np.copy(self.edgeWeights)
-        #self.transitionProbs = self.transitionProbs.transpose()
         self.transitionProbs = self.edgeWeights.transpose()
         
         #1 - make sure every row has a non-zero sum; any that do automatically get a self-looping edge
-        #TODO: np.sum(self.edgeWeights, axis=1) should give an identical answer; is it faster due to lil-matrix format?
         cs = np.sum(self.transitionProbs, axis=0)
-        csz = np.where(cs == 0)
+        csz = np.where(cs == 0)[1]
         self.transitionProbs[csz, csz] = 1.0
         
         #this generally speeds everything up
@@ -108,7 +123,6 @@ class LayeredGraph:
             self.normalizeTransProbs()
         
         #print time.time()-st
-        
         
     def normalizeUniformally(self):
         '''
@@ -177,9 +191,6 @@ class LayeredGraph:
         assert(np.all(np.isclose(np.sum(tm, axis=0), 1)))
         assert(np.isclose(np.sum(currentProbs), 1))
         
-        #TODO: is this going to be helpful? it tends to save space at the cost of run-time in my preliminary tests, try it on a real set IMO
-        tm = csr_matrix(tm)
-        
         prev = np.zeros(shape=currentProbs.shape)
         x = 0
         while x < 1000 and not np.all(np.isclose(currentProbs, prev)):
@@ -228,9 +239,6 @@ class LayeredGraph:
         assert(np.all(np.isclose(np.sum(tm, axis=0), 1)))
         assert(np.isclose(np.sum(currentProbs), 1))
         
-        #TODO: is this going to be helpful? it tends to save space at the cost of run-time in my preliminary tests, try it on a real set IMO
-        tm = csr_matrix(tm)
-        
         prev = np.zeros(shape=currentProbs.shape)
         x = 0
         while x < 1000 and not np.all(np.isclose(currentProbs, prev)):
@@ -258,6 +266,7 @@ if __name__ == '__main__':
     mg.addEdge('t1', 'n1', 't2', 'n1', 1, True)
     mg.addEdge('t1', 'n1', 't2', 'n2', 1, True)
     mg.addEdge('t1', 'n2', 't2', 'n1', 1, True)
+    #mg.addEdge('t1', 'n2', 't2', 'n2', 1, True)
     mg.addEdge('t2', 'n1', 't2', 'n2', 1, True)
     mg.addEdge('t2', 'n1', 't3', 'ABA', 1, False)
     mg.addEdge('t2', 'n2', 't3', 'C1orf72', 1, False)
@@ -268,9 +277,12 @@ if __name__ == '__main__':
     ranks = mg.RWR_rank({('t1', 'n1'): 1.0, ('t1', 'n2'): 1.0}, 0.1, set(['t2', 't3']))
     print(ranks)
     
-    import pickle as pickle
-    mg2 = pickle.loads(pickle.dumps(mg))
-    print(mg2.RWR_rank({('t1', 'n1'): 1.0, ('t1', 'n2'): 1.0}, 0.1, set(['t2', 't3'])))
+    print(mg.getEdge('t1', 'n1', 't2', 'n1'), mg.getEdge('t1', 'n1', 't2', 'n1', True))
+    print(mg.getEdge('t1', 'n1', 't1', 'n1'), mg.getEdge('t1', 'n1', 't1', 'n1', True))
+    
+    #import pickle as pickle
+    #mg2 = pickle.loads(pickle.dumps(mg))
+    #print(mg2.RWR_rank({('t1', 'n1'): 1.0, ('t1', 'n2'): 1.0}, 0.1, set(['t2', 't3'])))
     
     #'''
     '''
