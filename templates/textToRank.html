@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+    
+    <head>
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+    </head>
+    <body>
+        <form action="/text/rank" method="post">
+            <textarea name="indications" rows="20" cols="60">Place clinical indications, symptoms, and phenotypes here...</textarea>
+            <br>
+            <input type="submit" name="action" value="HTML">
+            <input type="submit" name="action" value="JSON">
+            <input type="submit" name="action" value="GENES">
+        </form>
+    </body>
+</html>
