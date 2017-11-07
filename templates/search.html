@@ -8,18 +8,20 @@
         <script>
             $(document).ready(function() {
                 $('.hpo-select').select2({
-                    minimumInputLength: 4
+                    minimumInputLength: 4,
+                    placeholder: 'Search for HPO terms...',
+                    ajax: {
+                        url: '/terms',
+                        delay: 300,
+                        dataType: 'json'
+                    }
                 });
             });
         </script>
     </head>
     <body>
         <form action="/rank" method="post">
-            <select name="term[]" class="hpo-select" multiple="multiple" style="width: 90%">
-                {% for t, l in terms %}
-                    <option value="{{ t }}">{{ t }} - {{ l }}</option>
-                {% endfor %}
-            </select>
+            <select name="term[]" class="hpo-select" multiple="multiple" style="width: 90%"></select>
             <br>
             <input type="submit" name="action" value="HTML">
             <input type="submit" name="action" value="JSON">

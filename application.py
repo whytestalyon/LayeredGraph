@@ -10,6 +10,7 @@ from flask import Response
 from flask import request
 import pickle
 import requests
+import xmltodict
 from urllib.parse import urlencode, quote_plus
 from pprint import pprint
 from HPOParser import getTermsAndSyns
@@ -36,14 +37,26 @@ def background():
 @app.route('/')
 @app.route('/search')
 def search():
-    terms = getTermsAndSyns('./HPO_graph_data/hp.obo')
     return render_template('search.html', terms=terms)
 
-@app.route('/text')
+@app.route('/text', methods=['GET'])
 def text():
     return render_template('textToRank.html')
 
-@app.route('/rank', methods=['POST'])
+@app.route('/terms', methods=['GET'])
+def terms():
+    pprint(request.args)
+    searchTerm = str(request.args.get('term'))
+    hpoTerms = getTermsAndSyns('./HPO_graph_data/hp.obo')
+    options = list([])
+
+    for hpo, defText in hpoTerms:
+        if searchTerm.lower() in defText.lower():
+            options.append({'id': hpo, 'text': (hpo + ' ' + defText)})
+
+    return jsonify({'results': options})
+
+@app.route('/rank', methods=['GET'])
 def rank():
     '''
     This is intended to be the workhorse function.  POST needs to include a "term" list that should be HPO terms matching values from the layered graph.
@@ -52,7 +65,7 @@ def rank():
     mg, restartProb, hpoWeights, bg = getMultigraphVars()
 
     # TODO: make this actually work
-    hpoTerms = set([str(x) for x in request.form.getlist('term[]')])
+    hpoTerms = set([str(x) for x in request.form('terms')])
     pprint(hpoTerms)
     # startProbs = {('HPO', h) : hpoWeights[h] for h in hpoTerms}
     startProbs = {}
@@ -86,68 +99,35 @@ def rank():
             ret += ' '.join([str(x) for x in (i, w, t, l)]) + '<br>'
         return ret@app.route('/rank', methods=['POST'])
 
-@app.route('/text/rank', methods=['POST'])
-def textrank():
-    '''
-    Workhorse function for converting text to hpo terms to genes.  POST needs to include a "indications" payload that
-    should be text to be annotated by the NCBO annotator.
-    '''
-
-    indicationsText = request.form['indications']
+@app.route('/text/annotate', methods=['GET'])
+def textannotate():
+    # annotate with HPO terms using the NCBO annotator
+    indications_text = str(request.args.get('indications'))
     payload = {'apikey': '8b5b7825-538d-40e0-9e9e-5ab9274a9aeb',
-               'text': indicationsText,
+               'text': indications_text,
                'ontologies': 'HP',
                'whole_word_only': 'false'}
     url = 'http://data.bioontology.org/annotator?' + urlencode(payload, quote_via=quote_plus)
     resp = requests.get(url)
-    pprint(resp.json())
 
-    # "constant" global data
-    mg, restartProb, hpoWeights, bg = getMultigraphVars()
-
-    # TODO: make this actually work
-    hpoTerms = set([])
+    # get definitions of HPO terms from PURL for the term
+    hpo_terms_defs = {}
     for annot in resp.json():
-        hpoTerms.add(annot['annotatedClass']['@id'].split('/')[-1].replace('_', ':'))
-        # hpoTerms.add(annot['annotatedClass']['@id'].replace('_', ':'))
+        purl = annot['annotatedClass']['@id']
+        hpoid = annot['annotatedClass']['@id'].split('/')[-1].replace('_', ':')
+        presp = requests.get(purl)
+        hpo_info = xmltodict.parse(presp.content)
 
-    pprint(hpoTerms)
-    # startProbs = {('HPO', h) : hpoWeights[h] for h in hpoTerms}
-    startProbs = {}
-    usedTerms = set([])
-    missingTerms = set([])
-    for h in hpoTerms:
-        if h in hpoWeights:
-            startProbs[('HPO', h)] = hpoWeights[h]
-            usedTerms.add(h)
-        else:
-            missingTerms.add(h)
+        for rdf_class in hpo_info['rdf:RDF']['Class']:
+            if rdf_class['@rdf:about'] == purl:
+                hpo_terms_defs[hpoid] = rdf_class['rdfs:label']['#text']
+                break
 
-    rankTypes = set(['gene'])
-    rankedGenes = mg.RWR_rank(startProbs, restartProb, rankTypes, bg)
+        presp.close()
 
-    if request.form['action'] == 'JSON':
-        rankings = []
-        for w, t, l in rankedGenes:
-            rankings.append({'weight': w, 'nodeType': t, 'label': l})
+    resp.close()
 
-        ret = {'rankings': rankings,
-               'usedTerms': list(usedTerms),
-               'missingTerms': list(missingTerms)}
-
-        return jsonify(ret)
-    elif request.form['action'] == 'GENES':
-        ret = ''
-        for w, t, l in rankedGenes:
-            ret += l + ';'
-        return ret
-    else:
-        ret = 'Used: ' + str(usedTerms) + '<br>'
-        ret += 'CSV-used: ' + str(';'.join(sorted(usedTerms))) + '<br>'
-        ret += 'Missing: ' + str(missingTerms) + '<br><br>'
-        for i, (w, t, l) in enumerate(rankedGenes[0:20]):
-            ret += ' '.join([str(x) for x in (i, w, t, l)]) + '<br>'
-        return ret
+    return jsonify(hpo_terms_defs)
 
 def getMultigraphVars():
     '''

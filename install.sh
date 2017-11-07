@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-pip3 install flask flask-restful requests numpy pronto six scipy
+pip3 install flask flask-restful requests numpy pronto six scipy xmltodict
 
 if [ ! -d ./HPO_graph_data ]; then
     echo "Preparing to download graph data, please enter Morgan username:"
