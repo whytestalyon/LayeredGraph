@@ -10,11 +10,12 @@
     <script>
         $(document).ready(function () {
             $("#get_terms").click(function () {
+                $("#annot_res").empty();
+                $("#resdiv").empty();
                 $.getJSON(
                     "/text/annotate",
                     {'indications': $("#indications").val()},
                     function (resultJson) {
-                        $("button").after("<h2>Terms from text (select all that apply)</h2>");
                         var fieldSet = "<fieldset id=\"hpofs\"><legend>Terms: </legend>";
                         $.each(resultJson, function(key, field){
                             fieldSet +=
@@ -22,12 +23,12 @@
                             "    <input type=\"checkbox\" name=\""+key+"\" id=\"checkbox-"+key+"\"><br>"
                         });
                         fieldSet += "  </fieldset>";
+                        $("#annot_res").append("<h2>Terms from text (select all that apply)</h2>");
                         $("#annot_res").append(fieldSet);
                         $("input[type='checkbox']").checkboxradio()
                         $("#annot_res").append("<h2>Search additional terms not automatically annotated</h2>");
                         $("#annot_res").append("<select name=\"term[]\" class=\"hpo-select\" multiple=\"multiple\" style=\"width: 50%\"></select><br>");
                         $("#annot_res").append("<h2>Select output format</h2>");
-                        $("#annot_res").append("<button id=\"html_btn\">HTML</button>");
                         $("#annot_res").append("<button id=\"json_btn\">JSON</button>");
                         $("#annot_res").append("<button id=\"genes_btn\">Genes</button>");
                         $('.hpo-select').select2({
@@ -40,17 +41,44 @@
                             }
                         });
                         $("#json_btn").click(function () {
+                            $("#resdiv").empty();
                             var selectedTerms = $("input[type='checkbox']:checked").map(function(){
                                 return $(this).attr('name');
                             }).get();
-                            var terms = $(".select2").parent().find("select").val()
-                            $.getJSON(
-                                "/rank",
-                                {"terms": terms},
-                                function (resultJson) {
-
-                                }
-                            );
+                            var terms = $(".select2").parent().find("select").val();
+                            var allTerms = terms.concat(selectedTerms);
+                            console.log(allTerms);
+                            $.ajax({
+                                    type: 'POST',
+                                    url: '/rank',
+                                    data: JSON.stringify(allTerms),
+                                    success: function(data) {
+                                        $("#resdiv").append(JSON.stringify(data, null, '\t'));
+                                    },
+                                    contentType: "application/json",
+                                    dataType: 'json'
+                            });
+                        });
+                        $("#genes_btn").click(function () {
+                            $("#resdiv").empty();
+                            var selectedTerms = $("input[type='checkbox']:checked").map(function(){
+                                return $(this).attr('name');
+                            }).get();
+                            var terms = $(".select2").parent().find("select").val();
+                            var allTerms = terms.concat(selectedTerms);
+                            console.log(allTerms);
+                            $.ajax({
+                                    type: 'POST',
+                                    url: '/rank',
+                                    data: JSON.stringify(allTerms),
+                                    success: function(data) {
+                                        var genes = '';
+                                        data.rankings.forEach(function (t) { genes += ';' + t.label; });
+                                        $("#resdiv").append(genes);
+                                    },
+                                    contentType: "application/json",
+                                    dataType: 'json'
+                            });
                         });
                     });
             });
@@ -62,6 +90,6 @@
     <br>
     <button id="get_terms">Get terms</button>
     <div id="annot_res"></div>
-    <div id="resdiv"></div>
+    <pre id="resdiv"></pre>
 </body>
 </html>

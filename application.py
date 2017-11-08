@@ -57,16 +57,20 @@ def terms():
 
     return jsonify({'results': options})
 
-@app.route('/rank', methods=['GET'])
+@app.route('/rank', methods=['POST'])
 def rank():
     '''
     This is intended to be the workhorse function.  POST needs to include a "term" list that should be HPO terms matching values from the layered graph.
     '''
+    mydata = request.get_json()
+    if mydata:
+        pprint(mydata)
+    else:
+        print("no json received")
+
     # "constant" global data
     mg, restartProb, hpoWeights, bg = getMultigraphVars()
-
-    # TODO: make this actually work
-    hpoTerms = set([str(x) for x in request.form('terms')])
+    hpoTerms = set([str(x) for x in mydata])
     pprint(hpoTerms)
     # startProbs = {('HPO', h) : hpoWeights[h] for h in hpoTerms}
     startProbs = {}
@@ -82,23 +86,15 @@ def rank():
     rankTypes = set(['gene'])
     rankedGenes = mg.RWR_rank(startProbs, restartProb, rankTypes, bg)
 
-    if request.form['action'] == 'JSON':
-        rankings = []
-        for w, t, l in rankedGenes:
-            rankings.append({'weight': w, 'nodeType': t, 'label': l})
+    rankings = []
+    for w, t, l in rankedGenes:
+        rankings.append({'weight': w, 'nodeType': t, 'label': l})
 
-        ret = {'rankings': rankings,
-               'usedTerms': list(usedTerms),
-               'missingTerms': list(missingTerms)}
+    ret = {'rankings': rankings,
+           'usedTerms': list(usedTerms),
+           'missingTerms': list(missingTerms)}
 
-        return jsonify(ret)
-    else:
-        ret = 'Used: ' + str(usedTerms) + '<br>'
-        ret += 'CSV-used: ' + str(';'.join(sorted(usedTerms))) + '<br>'
-        ret += 'Missing: ' + str(missingTerms) + '<br><br>'
-        for i, (w, t, l) in enumerate(rankedGenes[0:20]):
-            ret += ' '.join([str(x) for x in (i, w, t, l)]) + '<br>'
-        return ret@app.route('/rank', methods=['POST'])
+    return jsonify(ret)
 
 @app.route('/text/annotate', methods=['GET'])
 def textannotate():
@@ -110,7 +106,6 @@ def textannotate():
                'whole_word_only': 'false'}
     url = 'http://data.bioontology.org/annotator?' + urlencode(payload, quote_via=quote_plus)
     resp = requests.get(url)
-    pprint(resp.json())
 
     # get definitions of HPO terms from PURL for the term
     hpo_terms_defs = {}
