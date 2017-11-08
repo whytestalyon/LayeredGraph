@@ -43,12 +43,16 @@
                         });
                         $("#html_btn").click(function () {
                             $("#resdiv").empty();
+                            var selectedTerms = $("input[type='checkbox']:checked").map(function(){
+                                return $(this).attr('name');
+                            }).get();
                             var terms = $(".select2").parent().find("select").val();
-                            console.log(terms);
+                            var allTerms = terms.concat(selectedTerms);
+                            console.log(allTerms);
                             $.ajax({
                                     type: 'POST',
                                     url: '/rank',
-                                    data: JSON.stringify(terms),
+                                    data: JSON.stringify(allTerms),
                                     success: function(data) {
                                         $("#resdiv").append('Used: ' + JSON.stringify(data.usedTerms).replace("[","{").replace("]","}") + '<br>');
                                         $("#resdiv").append('CSV-used: ' + data.usedTerms.sort() + '<br>');
