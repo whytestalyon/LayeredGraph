@@ -37,6 +37,7 @@ def background():
 @app.route('/')
 @app.route('/search')
 def search():
+    terms = getTermsAndSyns('./HPO_graph_data/hp.obo')
     return render_template('search.html', terms=terms)
 
 @app.route('/text', methods=['GET'])
@@ -109,6 +110,7 @@ def textannotate():
                'whole_word_only': 'false'}
     url = 'http://data.bioontology.org/annotator?' + urlencode(payload, quote_via=quote_plus)
     resp = requests.get(url)
+    pprint(resp.json())
 
     # get definitions of HPO terms from PURL for the term
     hpo_terms_defs = {}
