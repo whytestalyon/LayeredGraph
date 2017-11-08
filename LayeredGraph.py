@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+'''
+LayeredGraph.py
+
+This file contains the implementation of a graph that allows for multiple "Layers" or "types" of nodes in the graph.  This also
+contains the implementation of Random Walk with Restart (RWR) that can be used to generate relationships in the graph.
+'''
 
 import numpy as np
 import random
@@ -165,13 +172,14 @@ class LayeredGraph:
                     dtEnd = dtStart+self.nodeTypeLen[dt]
                     self.transitionProbs[dtStart:dtEnd, ci] *= tps[i] / tots[i]
         
-    def RWR_rank(self, startProbs, restartProb, rankTypes, bg=None):
+    def RWR_rank(self, startProbs, restartProb, rankTypes, bg=None, cycleLimit=1000):
         '''
         Random Walk with Restart method
         @param startProbs - the non-zero probabilities of restarting at a node
         @param restartProb - the probability of having a restart
         @param rankTypes - set of nodeTypes to be included in the return
         @param bg - background levels; if None, no effect; otherwise, must be a numpy array of the same size of the probabilities that is used to normalize before ranking
+        @param cycleLimit - the maximum number of matrix multiplications to perform (default: 1000)
         @return - a list of tuples of form (weight, nodeType, nodeLabel) sorted with largest weights first
             weight - the probability of being at the node
             nodeType - type of the node, must be a member of "rankTypes" set
@@ -193,7 +201,7 @@ class LayeredGraph:
         
         prev = np.zeros(shape=currentProbs.shape)
         x = 0
-        while x < 1000 and not np.all(np.isclose(currentProbs, prev)):
+        while x < cycleLimit and not np.all(np.isclose(currentProbs, prev)):
             prev = currentProbs
             
             #classic formula: prob_(t+1) = (1-r)*TM.dot(prob_t) + r*prob_0
@@ -214,7 +222,7 @@ class LayeredGraph:
         
         return ret
     
-    def calculateBackground(self, startProbs, restartProb):
+    def calculateBackground(self, startProbs, restartProb, cycleLimit=1000):
         '''
         Random Walk with Restart background calculation.  This function performs a RWR using the given start and restart probabilities.  It then
         returns a blanket array of final probabilities for each node in the entire graph.  The intent is to provide a mechanism for normalizing
@@ -223,6 +231,7 @@ class LayeredGraph:
         of arriving at a particular node when compared to the background.
         @param startProbs - the non-zero probabilities of restarting at a node, must be an entry for EVERY node that could be a source node
         @param restartProb - the probability of having a restart
+        @param cycleLimit - the maximum number of matrix multiplications to perform (default: 1000)
         @return - an array containing the final probabilities for these conditions
         '''
         assert(restartProb >= 0.0 and restartProb <= 1.0)
@@ -241,7 +250,7 @@ class LayeredGraph:
         
         prev = np.zeros(shape=currentProbs.shape)
         x = 0
-        while x < 1000 and not np.all(np.isclose(currentProbs, prev)):
+        while x < cycleLimit and not np.all(np.isclose(currentProbs, prev)):
             prev = currentProbs
             
             #classic formula: prob_(t+1) = (1-r)*TM.dot(prob_t) + r*prob_0
@@ -249,9 +258,73 @@ class LayeredGraph:
             x += 1
         
         return currentProbs
+    
+    def RWR_iter(self, startProbs, restartProb, rankTypes, bg=None, cycleLimit=1000):
+        '''
+        Random Walk with Restart method
+        @param startProbs - the non-zero probabilities of restarting at a node
+        @param restartProb - the probability of having a restart
+        @param rankTypes - set of nodeTypes to be included in the return
+        @param bg - background levels; if None, no effect; otherwise, must be a numpy array of the same size of the probabilities that is used to normalize before ranking
+        @param cycleLimit - the maximum number of matrix multiplications to perform (default: 1000)
+        @return - a list of tuples of form (weight, nodeType, nodeLabel) sorted with largest weights first
+            weight - the probability of being at the node
+            nodeType - type of the node, must be a member of "rankTypes" set
+            nodeLabel - label of the node
+        '''
+        assert(restartProb >= 0.0 and restartProb <= 1.0)
         
+        #create the initial probabilities (based on a restart)
+        currentProbs = np.zeros(shape=(self.transitionProbs.shape[0], ), dtype='float')
+        for k in list(startProbs.keys()):
+            currentProbs[self.nodeIndex[k]] = startProbs[k]
+        currentProbs /= np.sum(currentProbs)
+        initProbs = np.copy(currentProbs)
+        
+        tm = self.transitionProbs
+        
+        assert(np.all(np.isclose(np.sum(tm, axis=0), 1)))
+        assert(np.isclose(np.sum(currentProbs), 1))
+        
+        prev = np.zeros(shape=currentProbs.shape)
+        x = 0
+        while x < cycleLimit and not np.all(np.isclose(currentProbs, prev)):
+            #now set the probs
+            prev = np.copy(currentProbs)
+            
+            #if we include background values, subtract them out to normalize the data
+            if not (bg is None):
+                currentProbs -= bg
+            
+            #now rank everything and only return values that are in the return set
+            cpSort = np.argsort(currentProbs)[::-1]
+            ret = []
+            for v in cpSort:
+                nt, nl = self.nodeOrdered[v]
+                if nt in rankTypes:
+                    ret.append((currentProbs[v], nt, nl))
+            yield ret
+            
+            #classic formula: prob_(t+1) = (1-r)*TM.dot(prob_t) + r*prob_0
+            currentProbs = (1-restartProb)*tm.dot(prev)+restartProb*initProbs
+            x += 1
+        
+        #if we include background values, subtract them out to normalize the data
+        if not (bg is None):
+            currentProbs -= bg
+        
+        #now rank everything and only return values that are in the return set
+        cpSort = np.argsort(currentProbs)[::-1]
+        ret = []
+        for v in cpSort:
+            nt, nl = self.nodeOrdered[v]
+            if nt in rankTypes:
+                ret.append((currentProbs[v], nt, nl))
+        
+        yield ret
+    
 if __name__ == '__main__':
-    #'''
+    #example graph constructed and run here
     mg = LayeredGraph()
     
     mg.addNode('t1', 'n1')
@@ -280,28 +353,4 @@ if __name__ == '__main__':
     print(mg.getEdge('t1', 'n1', 't2', 'n1'), mg.getEdge('t1', 'n1', 't2', 'n1', True))
     print(mg.getEdge('t1', 'n1', 't1', 'n1'), mg.getEdge('t1', 'n1', 't1', 'n1', True))
     
-    #import pickle as pickle
-    #mg2 = pickle.loads(pickle.dumps(mg))
-    #print(mg2.RWR_rank({('t1', 'n1'): 1.0, ('t1', 'n2'): 1.0}, 0.1, set(['t2', 't3'])))
-    
-    #'''
-    '''
-    mg = MultiGraph()
-    N = 10000
-    edgeProb = .01
-    for x in xrange(0, N):
-        mg.addNode('t1', x)
-    mg.finalizeNodeList()
-    
-    for x in xrange(0, N):
-        for y in xrange(0, N):
-            if random.random() < edgeProb:
-                mg.addEdge('t1', x, 't1', y, 1, False)
-    mg.calculateTransitionMatrix()
-    
-    st = time.time()
-    ranks = mg.RWR_rank({('t1', 0):1.0}, .1, set(['t1']))
-    et = time.time()
-    print et-st
-    #'''
     
