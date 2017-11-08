@@ -22,7 +22,8 @@ def createNewLayeredGraph(hpoPhenoToGenoFN, graphStructureFN, includeDisease, in
     '''
     #parameters for how the graph generation should be handled
     PUSHUP = True
-    WEIGHTED_P2G = False
+    WEIGHTED_P2G = True
+    WEIGHTED_P2P = True
     
     #first, load in the phenotype to gene mappings
     print('Loading HPO to gene information...')
@@ -64,6 +65,10 @@ def createNewLayeredGraph(hpoPhenoToGenoFN, graphStructureFN, includeDisease, in
     else:
         prots, protEdges, prot2gene = set([]), set([]), {}
     
+    if WEIGHTED_P2G:
+        ed, aliases = getEntrezDict()
+        p2gWeights = getP2GWeights()
+    
     #init
     mg = LayeredGraph.LayeredGraph()
     
@@ -76,12 +81,25 @@ def createNewLayeredGraph(hpoPhenoToGenoFN, graphStructureFN, includeDisease, in
     geneSet = set([])
     for p in p2g:
         geneSet |= p2g[p]
-    for g in geneSet:
-        mg.addNode('gene', g)
     
     if WEIGHTED_P2G:
-        #ed, aliases = getEntrezDict()
-        p2gWeights = getP2GWeights()
+        print('Using Pubtator-based p2g...')
+        pubGeneSet = set([])
+        for eid, hpo in p2gWeights:
+            pubGeneSet.add(ed[eid])
+    
+    if True:
+        #############
+        comboSet = geneSet | pubGeneSet
+        print(str(len(comboSet))+' genes identified for the graph...')
+        for g in comboSet:
+            mg.addNode('gene', g)
+        #############
+    
+    else:
+        print(str(len(geneSet))+' genes identified for the graph...')
+        for g in geneSet:
+            mg.addNode('gene', g)
     
     if includeDisease:
         print('Adding disease nodes...')
@@ -110,16 +128,32 @@ def createNewLayeredGraph(hpoPhenoToGenoFN, graphStructureFN, includeDisease, in
     for parent in list(edges.keys()):
         for child in edges[parent]:
             #first method, all edges have constant weight
-            #mg.addEdge('HPO', parent, 'HPO', child, 1, True)
-            
-            #second method, scales with gene similarity
-            similarity = len(p2g.get(parent, set([])) & p2g.get(child, set([])))
-            #similarity = np.log2(len(p2g.get(parent, set([])) & p2g.get(child, set([]))) + 1)
-            mg.addEdge('HPO', parent, 'HPO', child, similarity+1, True)
+            if not WEIGHTED_P2P:
+                mg.addEdge('HPO', parent, 'HPO', child, 1, True)
+            else:
+                #second method, scales with gene similarity
+                similarity = len(p2g.get(parent, set([])) & p2g.get(child, set([])))
+                #similarity = np.log2(len(p2g.get(parent, set([])) & p2g.get(child, set([]))) + 1)
+                mg.addEdge('HPO', parent, 'HPO', child, similarity+1, True)
     
     print('Adding p2g edges...')
+    '''
     if WEIGHTED_P2G:
-        raise Exception('UNIMPLEMENTED')
+        for (eid, hpo) in p2gWeights:
+            if (hpo not in nodes):
+                alias = aliases.get(hpo, None)
+                if alias == None:
+                    print('Warning: '+hpo+' not found in HPO database.')
+                    continue
+                else:
+                    print('Swapping '+hpo+' for alias '+alias)
+                    hpo = alias
+            
+            g = ed[eid]
+            if (g in geneSet):
+                mg.addEdge('HPO', hpo, 'gene', g, p2gWeights[(eid, hpo)], False)
+            else:
+                print('Ignoring '+hpo+'-'+g)
     else:
         for p in p2g:
             for g in p2g[p]:
@@ -128,6 +162,55 @@ def createNewLayeredGraph(hpoPhenoToGenoFN, graphStructureFN, includeDisease, in
                 
                 #second method, scales with gene similarity
                 mg.addEdge('HPO', p, 'gene', g, 2, False)
+    '''
+    
+    ################################################################
+    print('WARNING: combined ignoring flags')
+    for p in p2g:
+        for g in p2g[p]:
+            #first method, all edges have constant weight
+            mg.addEdge('HPO', p, 'gene', g, 1, False)
+            
+            #second method, scales with gene similarity
+            #mg.addEdge('HPO', p, 'gene', g, 2, False)
+    
+    maxValue = 0.0
+    for (eid, hpo) in p2gWeights:
+        if (hpo not in nodes):
+            alias = aliases.get(hpo, None)
+            if alias == None:
+                print('Warning: '+hpo+' not found in HPO database.')
+                continue
+            else:
+                print('Swapping '+hpo+' for alias '+alias)
+                hpo = alias
+        
+        if p2gWeights[(eid, hpo)] > maxValue:
+        #if np.log2(p2gWeights[(eid, hpo)]) > maxValue:
+            maxValue = p2gWeights[(eid, hpo)]
+            #maxValue = np.log2(p2gWeights[(eid, hpo)])
+        
+    for (eid, hpo) in p2gWeights:
+        if (hpo not in nodes):
+            alias = aliases.get(hpo, None)
+            if alias == None:
+                print('Warning: '+hpo+' not found in HPO database.')
+                continue
+            else:
+                print('Swapping '+hpo+' for alias '+alias)
+                hpo = alias
+        
+        g = ed[eid]
+        if True or (g in geneSet):
+            if (g in p2g.get(hpo, [])):
+                mg.addEdge('HPO', hpo, 'gene', g, 1.0+(p2gWeights[(eid, hpo)] / maxValue), False)
+                #mg.addEdge('HPO', hpo, 'gene', g, 1.0+(np.log2(p2gWeights[(eid, hpo)]) / maxValue), False)
+            else:
+                mg.addEdge('HPO', hpo, 'gene', g, p2gWeights[(eid, hpo)] / maxValue, False)
+                #mg.addEdge('HPO', hpo, 'gene', g, np.log2(p2gWeights[(eid, hpo)]) / maxValue, False)
+        else:
+            print('Ignoring '+hpo+'-'+g)
+    ################################################################
     
     if includeDisease:
         print('Adding d2p edges...')
@@ -308,6 +391,42 @@ def pushP2gUp(p2g, nodes, edges):
             analyzed.add(currNode)
     
     return p2g
+
+def deriveParents(nodes, edges):
+    '''
+    This function will calculate all parent terms for each HPO node
+    @param nodes - the set of nodes in the HPO graph
+    @param edges - the set of edges where key in the parent node in the HPO graph and the value is a set of children
+    @return - a dictionary where key is an HPO term and value is a set of nodes that are ancestors of that term
+    '''
+    #first calculate all immediate parents
+    allKeys = set([])
+    revEdges = {}
+    for parent in edges:
+        allKeys.add(parent)
+        for child in edges[parent]:
+            if (child not in revEdges):
+                revEdges[child] = set([])
+            revEdges[child].add(parent)
+            allKeys.add(child)
+    
+    analyzed = set([])
+    topush = list(allKeys)
+    ret = {}
+    
+    while len(topush) > 0:
+        currNode = topush.pop(0)
+        if revEdges.get(currNode, set([])).issubset(analyzed):
+            #all parent terms have finished
+            analyzed.add(currNode)
+            ret[currNode] = set([])
+            for parent in revEdges.get(currNode, set([])):
+                ret[currNode] |= ret[parent]
+        else:
+            #still waiting on parent terms
+            topush.append(currNode)
+    
+    return ret
 
 def calculateHpoScores(nodes, edges):
     '''
@@ -534,35 +653,20 @@ def loadProteinToEns(fn):
 def getP2GWeights():
     '''
     This will calculate the p2g weights based on pubtator stuff
-    @return - dictionary where key is (entrez ID, hpo term) and value is a weight
+    @return - dictionary where key is (entrez ID, hpo term) and value is the number of pmids attached to that pair
     '''
-    
-    raise Exception('not implemented with new file')
-    
     p2gSets = {}
+    fp = open('/Users/matt/data/HPO_dl/gene2phenotype.json', 'r')
     
-    fp = open('/Users/matt/data/HPO_dl/disease2gene2phenotypes.json', 'r')
     for l in fp:
         j = json.loads(l)
         gene = j['geneId']
-        hpoList = j['hpoId']
+        hpoTerm = j['hpoId']
         pmids = j['pmids']
-        
-        for h in hpoList:
-            k = (gene, h)
-            if (k not in p2gSets):
-                p2gSets[k] = set([])
-            for pm in pmids:
-                p2gSets[k].add(int(pm))
+        p2gSets[(gene, hpoTerm)] = len(pmids)
+    
     fp.close()
-    
-    p2gW = {}
-    for k in p2gSets:
-        p2gW[k] = len(p2gSets[k])
-    
-    print(p2gW)
-    
-    return p2gW
+    return p2gSets
 
 def getEntrezDict():
     '''
@@ -727,6 +831,10 @@ def testRankings(mg):
     cases = rankCasesFromMana()
     
     hpoWeights = pickle.load(open('/Users/matt/data/HPO_dl/multiHpoWeight_biogrid_pushup.pickle', 'rb'))
+    #hpoFreq = getHPODiseaseFreq()
+    #maxFreq = max([hpoFreq[k] for k in hpoFreq])
+    #hpoWeights = {k : 1.0/hpoFreq[k] for k in hpoFreq}
+    
     restartProb = 0.1
     
     BG_CALC = True
@@ -738,6 +846,7 @@ def testRankings(mg):
         if GRAPH_BASED_WEIGHTS:
             #this equally distributes the weight across all terms
             bgProbs = {('HPO', h) : hpoWeights[h] for h in mg.nodes['HPO']}
+            #bgProbs = {('HPO', h) : hpoWeights.get(h, 1.0) for h in mg.nodes['HPO']}
         else:
             #this distributes by how often we see weights
             bgProbs = {}
@@ -757,8 +866,11 @@ def testRankings(mg):
             fp.close()
             '''
             bgProbs = getHPODiseaseFreq()
+            
             #for k in bgProbs.keys():
             #    bgProbs[k] *= hpoWeights[k[1]]
+            
+            #bgProbs = getPushHPODiseaseFreq('/Users/matt/data/HPO_dl/hp.obo')
         
         bg = mg.calculateBackground(bgProbs, restartProb)
     else:
@@ -770,6 +882,7 @@ def testRankings(mg):
         #print caseLabel, hpoTerms
         if GRAPH_BASED_WEIGHTS:
             startProbs = {('HPO', h) : hpoWeights[h] for h in hpoTerms}
+            #startProbs = {('HPO', h) : hpoWeights.get(h, 1.0) for h in hpoTerms}
         else:
             startProbs = {('HPO', h) : 1.0 for h in hpoTerms}
             '''
@@ -951,12 +1064,16 @@ def rankCase(mg):
     
     #udn case 84; second set is with the new info
     #hpoTerms = set(['HP:0000750', 'HP:0002451', 'HP:0001288', 'HP:0002080', 'HP:0006895', 'HP:0012531', 'HP:0003457', 'HP:0002141', 'HP:0007340', 'HP:0006315', 'HP:0040083', 'HP:0009763'])
-    hpoTerms = set(['HP:0000750', 'HP:0002451', 'HP:0001288', 'HP:0001009', 'HP:0001360', 'HP:0002080', 'HP:0006895', 'HP:0001258', 'HP:0003457', 'HP:0012531', 'HP:0002141', 'HP:0007340', 'HP:0006315', 'HP:0040083', 'HP:0009763'])
-    jsonDump = '/Users/matt/Downloads/SL210501_results.json'
+    #hpoTerms = set(['HP:0000750', 'HP:0002451', 'HP:0001288', 'HP:0001009', 'HP:0001360', 'HP:0002080', 'HP:0006895', 'HP:0001258', 'HP:0003457', 'HP:0012531', 'HP:0002141', 'HP:0007340', 'HP:0006315', 'HP:0040083', 'HP:0009763'])
+    #jsonDump = '/Users/matt/Downloads/SL210501_results.json'
     
     #udn case 107
     #hpoTerms = set(['HP:0000975', 'HP:0001290', 'HP:0000252', 'HP:0002079', 'HP:0001324', 'HP:0001263', 'HP:0004712', 'HP:0001321', 'HP:0002028', 'HP:0001508', 'HP:0001250', 'HP:0002650', 'HP:0002020', 'HP:0003128', 'HP:0003198'])
     #jsonDump = '/Users/matt/Downloads/SL219796_results.json'
+    
+    #udn case XXX
+    hpoTerms = set(['HP:0003198', 'HP:0003202'])
+    
     
     #primary data
     hpoWeights = pickle.load(open('/Users/matt/data/HPO_dl/multiHpoWeight_biogrid_pushup.pickle', 'rb'))
@@ -967,6 +1084,7 @@ def rankCase(mg):
     bgNodes = mg.nodes['HPO']
     bgProbs = {('HPO', h) : hpoWeights[h] for h in mg.nodes['HPO']}
     bg = mg.calculateBackground(bgProbs, restartProb)
+    #bg = None
     
     rankTypes = set(['gene'])
     
@@ -974,7 +1092,10 @@ def rankCase(mg):
     
     print('Raw gene list:')
     for i, (w, l, g) in enumerate(rankedGenes[0:20]):
+    #for i, (w, l, g) in enumerate(rankedGenes):
         print(i, w, l, g)
+        #if g == 'PYROXD1':
+        #    break
     print()
     
     codiGenes = getCodiGenes(jsonDump)
@@ -1261,6 +1382,32 @@ def getHPODiseaseFreq():
     fp.close()
     return bgFreq
 
+def getPushHPODiseaseFreq(graphStructureFN):
+    #second, build a graph
+    nodes, edges, altIDMap = loadGraphStructure(graphStructureFN)
+    parentDict = deriveParents(nodes, edges)
+    
+    omimToHPO = {}
+    fp = open('/Users/matt/data/HPO_dl/phenotype_annotation.tab', 'r')
+    for l in fp:
+        pieces = l.rstrip().split('\t')
+        if pieces[0] == 'OMIM':
+            omimID = pieces[1]
+            hpoTerm = pieces[4]
+            
+            if (omimID not in omimToHPO):
+                omimToHPO[omimID] = set([])
+            omimToHPO[omimID].add(hpoTerm)
+            omimToHPO[omimID] |= parentDict.get(hpoTerm, set([]))
+    fp.close()
+    
+    bgFreq = {}
+    for omimID in omimToHPO:
+        for h in omimToHPO[omimID]:
+            bgFreq[('HPO', h)] = bgFreq.get(('HPO', h), 0)+1
+    
+    return bgFreq
+    
 if __name__ == '__main__':
     
     
@@ -1270,6 +1417,11 @@ if __name__ == '__main__':
     #static files we will be using
     hpoPhenoToGenoFN = '/Users/matt/data/HPO_dl/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt'
     graphStructureFN = '/Users/matt/data/HPO_dl/hp.obo'
+    
+    #d = getPushHPODiseaseFreq(graphStructureFN)
+    #for k in sorted(d.keys()):
+    #    print(k, d[k])
+    #exit()
     
     #output files
     REGENERATE_GRAPH = False
@@ -1318,7 +1470,7 @@ if __name__ == '__main__':
     retSet = set(['HPO', 'gene'])
     print(mg.RWR_rank(initNodes, restartProb, retSet)[0:10])
     #'''
-    '''
+    #'''
     st = time.time()
     #runTests(mg)
     testRankings(mg)
@@ -1329,5 +1481,5 @@ if __name__ == '__main__':
     #rankCase(mg)
     
     #run through all the UDN cases you curated and generate stats
-    rankCasesFromUDN(mg)
+    #rankCasesFromUDN(mg)
     
