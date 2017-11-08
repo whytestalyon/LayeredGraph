@@ -29,6 +29,7 @@
                         $("#annot_res").append("<h2>Search additional terms not automatically annotated</h2>");
                         $("#annot_res").append("<select name=\"term[]\" class=\"hpo-select\" multiple=\"multiple\" style=\"width: 50%\"></select><br>");
                         $("#annot_res").append("<h2>Select output format</h2>");
+                        $("#annot_res").append("<button id=\"html_btn\">HTML</button>");
                         $("#annot_res").append("<button id=\"json_btn\">JSON</button>");
                         $("#annot_res").append("<button id=\"genes_btn\">Genes</button>");
                         $('.hpo-select').select2({
@@ -39,6 +40,28 @@
                                 delay: 300,
                                 dataType: 'json'
                             }
+                        });
+                        $("#html_btn").click(function () {
+                            $("#resdiv").empty();
+                            var terms = $(".select2").parent().find("select").val();
+                            console.log(terms);
+                            $.ajax({
+                                    type: 'POST',
+                                    url: '/rank',
+                                    data: JSON.stringify(terms),
+                                    success: function(data) {
+                                        $("#resdiv").append('Used: ' + JSON.stringify(data.usedTerms).replace("[","{").replace("]","}") + '<br>');
+                                        $("#resdiv").append('CSV-used: ' + data.usedTerms.sort() + '<br>');
+                                        $("#resdiv").append('Missing: ' + data.missingTerms + '<br><br>');
+
+                                        var i;
+                                        for (i = 0; i < 20; i++) {
+                                            $("#resdiv").append(' ' + data.rankings[i].weight + ' ' + data.rankings[i].nodeType + ' ' + data.rankings[i].label + '<br>');
+                                        }
+                                    },
+                                    contentType: "application/json",
+                                    dataType: 'json'
+                            });
                         });
                         $("#json_btn").click(function () {
                             $("#resdiv").empty();

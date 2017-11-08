@@ -34,12 +34,12 @@ def background():
     
     return jsonify(bg)
 
-@app.route('/')
 @app.route('/search')
 def search():
     terms = getTermsAndSyns('./HPO_graph_data/hp.obo')
     return render_template('search.html', terms=terms)
 
+@app.route('/')
 @app.route('/text', methods=['GET'])
 def text():
     return render_template('textToRank.html')
@@ -63,15 +63,11 @@ def rank():
     This is intended to be the workhorse function.  POST needs to include a "term" list that should be HPO terms matching values from the layered graph.
     '''
     mydata = request.get_json()
-    if mydata:
-        pprint(mydata)
-    else:
-        print("no json received")
 
     # "constant" global data
     mg, restartProb, hpoWeights, bg = getMultigraphVars()
     hpoTerms = set([str(x) for x in mydata])
-    pprint(hpoTerms)
+
     # startProbs = {('HPO', h) : hpoWeights[h] for h in hpoTerms}
     startProbs = {}
     usedTerms = set([])
@@ -93,7 +89,6 @@ def rank():
     ret = {'rankings': rankings,
            'usedTerms': list(usedTerms),
            'missingTerms': list(missingTerms)}
-
     return jsonify(ret)
 
 @app.route('/text/annotate', methods=['GET'])
