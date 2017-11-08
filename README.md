@@ -65,7 +65,7 @@ into the uploaded HPO to gene graph that are not talked about here.  For more in
 Easy installation can be obtained by running the supplied ```install.sh```.  This will install necessary python3 packages and download
 data from the Morgan shared server for use.
 
-Once the pre-requisites are installed, simply run ```python3 application.py``` and navigate to [http://127.0.0.1:5000/search](http://127.0.0.1:5000/search) to access the GUI.  This will return a JSON
+Once the pre-requisites are installed, simply run ```python3 application.py``` and navigate to [http://127.0.0.1:5000](http://127.0.0.1:5000) to access the GUI.  This will return a JSON
 output that can also be accessed programmatically via [http://127.0.0.1:5000/rank](http://127.0.0.1:5000/rank).
 
 ### Docker install
