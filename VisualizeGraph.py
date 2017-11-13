@@ -38,9 +38,10 @@ def saveGraphImage(mg, outFN, rankings=None, minWeight=0.0, drawEdgeWeights=Fals
     #for k in sorted(n.keys()):
     for k in nodeTypes:
         for v in sorted(n[k]):
+            vw = v.replace(':', '_')
             if rankings == None:    
                 #if there are no rankings, then always write the node
-                fp.write(k+'_'+v+';\n')
+                fp.write(k+'_'+vw+';\n')
             else:
                 #we have rankings, so only write the node if it has sufficient weight
                 r = rDict[(k, v)]
@@ -53,7 +54,7 @@ def saveGraphImage(mg, outFN, rankings=None, minWeight=0.0, drawEdgeWeights=Fals
                 fcHash = '#'+bytes.hex(struct.pack('BBB',*rgb))
                 
                 #write the node and include the weight
-                fp.write('{}_{} [label="{}_{} ({:.4f})" style=filled fillcolor="{}"];\n'.format(k, v.replace(':', '_'), k, v.replace(':', '_'), r, fcHash));
+                fp.write('{}_{} [label="{}_{} ({:.4f})" style=filled fillcolor="{}"];\n'.format(k, vw, k, vw, r, fcHash));
             
             #now go through the nodes again looking for edges
             #for k2 in sorted(n.keys()):
@@ -69,13 +70,14 @@ def saveGraphImage(mg, outFN, rankings=None, minWeight=0.0, drawEdgeWeights=Fals
                     w = mg.getEdge(k, v, k2, v2)
                     if w > 0.0:
                         wn = mg.getEdge(k, v, k2, v2, True)
+                        vw2 = v2.replace(':', '_')
                         if drawEdgeWeights:
                             #include the raw weight and the normalized weight
                             #TODO: option for one or both?
-                            fp.write('{}_{} -> {}_{} [label="{}({:.2f})"];\n'.format(k, v, k2, v2, w, wn))
+                            fp.write('{}_{} -> {}_{} [label="{}({:.2f})"];\n'.format(k, vw, k2, vw2, w, wn))
                         else:
                             #only include the edge itself
-                            fp.write('{}_{} -> {}_{};\n'.format(k, v.replace(':', '_'), k2, v2.replace(':', '_')))
+                            fp.write('{}_{} -> {}_{};\n'.format(k, vw, k2, vw2))
                             
         
     fp.write('}\n')
