@@ -54,6 +54,8 @@ def terms():
     for hpo, defText in hpoTerms:
         if searchTerm.lower() in defText.lower():
             options.append({'id': hpo, 'text': (hpo + ' ' + defText)})
+        if searchTerm.lower() in hpo.lower():
+            options.append({'id': hpo, 'text': (hpo + ' ' + defText)})
 
     return jsonify({'results': options})
 
@@ -112,7 +114,10 @@ def textannotate():
 
         for rdf_class in hpo_info['rdf:RDF']['Class']:
             if rdf_class['@rdf:about'] == purl:
-                hpo_terms_defs[hpoid] = rdf_class['rdfs:label']['#text']
+                if '#text' in rdf_class['rdfs:label']:
+                    hpo_terms_defs[hpoid] = rdf_class['rdfs:label']['#text']
+                else:
+                    hpo_terms_defs[hpoid] = rdf_class['rdfs:label']
                 break
 
         presp.close()
