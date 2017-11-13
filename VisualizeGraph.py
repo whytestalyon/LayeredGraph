@@ -11,11 +11,11 @@ import struct
 
 from LayeredGraph import LayeredGraph
 
-def saveGraphImage(mg, outFN, rankings=None, minWeight=0.0, drawEdgeWeights=False):
+def saveGraphImage(mg, outFN, rankings=None, minWeight=0.0, drawEdgeWeights=False, nodeTypes=None):
     '''
     This function generates a dot file for graphviz to visualize the graph
     @param mg - the LayeredGraph to generate an image from
-    @param outFN - the location to save the output (.png is expected)
+    @param outFN - the location to save the output (.dot is expected)
     @param rankings - the full rankings of all nodes in the graph (default: None, do not color the graph and visualize the whole graph)
     @param minWeight - the minimum weight from the ranking required to show up in the image (default: 0.0)
     @param drawEdgeWeights - if True, weight values will be included on the edges (default: False)
@@ -31,8 +31,12 @@ def saveGraphImage(mg, outFN, rankings=None, minWeight=0.0, drawEdgeWeights=Fals
     fp.write('digraph food {\n')
     n = mg.nodes
     
+    if nodeTypes == None:
+        nodeTypes = sorted(n.keys())
+    
     #iterate through all nodes in the graph
-    for k in sorted(n.keys()):
+    #for k in sorted(n.keys()):
+    for k in nodeTypes:
         for v in sorted(n[k]):
             if rankings == None:    
                 #if there are no rankings, then always write the node
@@ -52,7 +56,8 @@ def saveGraphImage(mg, outFN, rankings=None, minWeight=0.0, drawEdgeWeights=Fals
                 fp.write('{}_{} [label="{}_{} ({:.4f})" style=filled fillcolor="{}"];\n'.format(k, v.replace(':', '_'), k, v.replace(':', '_'), r, fcHash));
             
             #now go through the nodes again looking for edges
-            for k2 in sorted(n.keys()):
+            #for k2 in sorted(n.keys()):
+            for k2 in nodeTypes:
                 for v2 in sorted(n[k2]):
                     #make sure this node has enough weight to show up
                     if rankings != None:
