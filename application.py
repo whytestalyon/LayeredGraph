@@ -104,23 +104,15 @@ def textannotate():
     url = 'http://data.bioontology.org/annotator?' + urlencode(payload, quote_via=quote_plus)
     resp = requests.get(url)
 
-    # get definitions of HPO terms from PURL for the term
+    # get definitions of HPO terms
+    hpoTerms = getTermsAndSyns('./HPO_graph_data/hp.obo')
     hpo_terms_defs = {}
     for annot in resp.json():
-        purl = annot['annotatedClass']['@id']
         hpoid = annot['annotatedClass']['@id'].split('/')[-1].replace('_', ':')
-        presp = requests.get(purl)
-        hpo_info = xmltodict.parse(presp.content)
-
-        for rdf_class in hpo_info['rdf:RDF']['Class']:
-            if rdf_class['@rdf:about'] == purl:
-                if '#text' in rdf_class['rdfs:label']:
-                    hpo_terms_defs[hpoid] = rdf_class['rdfs:label']['#text']
-                else:
-                    hpo_terms_defs[hpoid] = rdf_class['rdfs:label']
+        for hpo, defText in hpoTerms:
+            if hpoid.lower() in hpo.lower():
+                hpo_terms_defs[hpoid] = defText
                 break
-
-        presp.close()
 
     resp.close()
 
