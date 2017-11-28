@@ -99,9 +99,28 @@
                                     url: '/rank',
                                     data: JSON.stringify(allTerms),
                                     success: function(data) {
-                                        var genes = '';
-                                        data.rankings.forEach(function (t) { genes += ';' + t.label; });
-                                        $("#resdiv").append(genes);
+                                        $("#resdiv").append('Used: ' + JSON.stringify(data.usedTerms).replace("[","{").replace("]","}") + '<br>');
+                                        $("#resdiv").append('CSV-used: ' + data.usedTerms.sort() + '<br>');
+                                        $("#resdiv").append('Missing: ' + data.missingTerms + '<br><br>');
+
+                                        var genes = [];
+                                        data.rankings.forEach(function (t) { genes.push(t.label); });
+                                        $("#resdiv").append("<h4>Top 20 genes</h4>");
+                                        $("#resdiv").append(genes.slice(0, 19).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                                        $("#resdiv").append("<h4>Top 50 genes</h4>");
+                                        $("#resdiv").append(genes.slice(0, 49).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                                        $("#resdiv").append("<h4>Top 100 genes</h4>");
+                                        $("#resdiv").append(genes.slice(0, 99).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                                        $("#resdiv").append("<h4>Top 500 genes</h4>");
+                                        $("#resdiv").append(genes.slice(0, 499).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                                        $("#resdiv").append("<h4>Top 1000 genes</h4>");
+                                        $("#resdiv").append(genes.slice(0, 999).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                                        $("#resdiv").append("<h4>Top 2000 genes</h4>");
+                                        $("#resdiv").append(genes.slice(0, 1999).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                                        $("#resdiv").append("<h4>Top 5000 genes</h4>");
+                                        $("#resdiv").append(genes.slice(0, 4999).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                                        $("#resdiv").append("<h4>All genes</h4>");
+                                        $("#resdiv").append(genes.toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
                                     },
                                     contentType: "application/json",
                                     dataType: 'json'
