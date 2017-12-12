@@ -44,6 +44,10 @@ def search():
 def text():
     return render_template('textToRank.html')
 
+@app.route('/table', methods=['GET'])
+def table():
+    return render_template('textToTable.html')
+
 @app.route('/terms', methods=['GET'])
 def terms():
     pprint(request.args)
