@@ -126,10 +126,10 @@ def deeprank():
             for i, (w, t, l) in enumerate(termWeights):
                 if (l not in indivRanks):
                     indivRanks[l] = {}
-                #indivRanks[l][h] = (i+1, w)
-                #TODO: somehow get rank info also
-                indivRanks[l][h] = w
-                indivRanks[l][h+'-RANK'] = (i+1)
+                indivRanks[l][h] = (i+1, w)
+                #residual method for when these were separate values
+                #indivRanks[l][h] = w
+                #indivRanks[l][h+'-RANK'] = (i+1)
         else:
             missingTerms.add(h)
 

@@ -68,7 +68,11 @@
                             ];
                             
                             for (t in allTerms) {
-                                columns.push({title: allTerms[t], data: allTerms[t]});
+                                columns.push({title: allTerms[t], data: allTerms[t],
+                                             mRender: function(data, type, full){
+                                                    if(type == 'display') return data[1]+" ("+data[0]+")";
+                                                    else return data[1];
+                                                }});
                             }
                             
                             console.log(columns);
@@ -94,10 +98,10 @@
                                                 
                                                 //loop through the HPO terms
                                                 for (x=3; x < columns.length; x++) {
-                                                    if(data[columns[x].title]*1 > 0) {
+                                                    if(data[columns[x].title][1]*1 > 0) {
                                                         $('td', row).eq(x).addClass('highlight');
                                                     }
-                                                    else if(data[columns[x].title]*1 < 0) {
+                                                    else if(data[columns[x].title][1]*1 < 0) {
                                                         $('td', row).eq(x).addClass('revhighlight');
                                                     }
                                                 }
