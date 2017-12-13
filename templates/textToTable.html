@@ -53,7 +53,9 @@
                             }
                         });
                         $("#table_btn").click(function () {
-                            //$("#resdiv").empty();
+                            $("#resdiv").empty();
+                            $("#resdiv").append("<table id=\"restable\"></table>");
+                
                             var selectedTerms = $("input[type='checkbox']:checked").map(function(){
                                 return $(this).attr('name');
                             }).get();
