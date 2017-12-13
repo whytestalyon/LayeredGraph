@@ -2,6 +2,16 @@
 <html>
 
 <head>
+    <style>
+        td.highlight {
+            font-weight: bold;
+            color: blue;
+        }
+        td.revhighlight {
+            font-weight: bold;
+            color: red;
+        }
+    </style>
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -51,18 +61,47 @@
                             var allTerms = terms.concat(selectedTerms);
                             console.log(allTerms);
                             
+                            columns = [
+                                {title: "Rank", data: 'rank'},
+                                {title: "Combined", data: 'weight'},
+                                {title: "Gene", data: 'label'}
+                            ];
+                            
+                            for (t in allTerms) {
+                                columns.push({title: allTerms[t], data: allTerms[t]});
+                            }
+                            
+                            console.log(columns);
+                            
                             $.ajax({
                                     type: 'POST',
-                                    url: '/rank',
+                                    url: '/deeprank',
                                     data: JSON.stringify(allTerms),
                                     success: function(data) {
                                         //$("#resdiv").append(JSON.stringify(data, null, '\t'));
-                                        $("#restable").DataTable({
+                                        $("#restable").dataTable({
                                             data: data.rankings,
-                                            columns: [
-                                                {data: 'weight'},
-                                                {data: 'label'}
-                                            ]
+                                            columns: columns,
+                                            order: [[0, 'asc']],
+                                            createdRow: function ( row, data, index ) {
+                                                //do the combined weights
+                                                if (data.weight*1 > 0) {
+                                                    $('td', row).eq(1).addClass('highlight');
+                                                }
+                                                else if (data.weight*1 < 0) {
+                                                    $('td', row).eq(1).addClass('revhighlight');
+                                                }
+                                                
+                                                //loop through the HPO terms
+                                                for (x=3; x < columns.length; x++) {
+                                                    if(data[columns[x].title]*1 > 0) {
+                                                        $('td', row).eq(x).addClass('highlight');
+                                                    }
+                                                    else if(data[columns[x].title]*1 < 0) {
+                                                        $('td', row).eq(x).addClass('revhighlight');
+                                                    }
+                                                }
+                                            }
                                         });
                                     },
                                     contentType: "application/json",
