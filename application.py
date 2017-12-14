@@ -44,6 +44,10 @@ def search():
 def text():
     return render_template('textToRank.html')
 
+@app.route('/table', methods=['GET'])
+def table():
+    return render_template('textToTable.html')
+
 @app.route('/terms', methods=['GET'])
 def terms():
     pprint(request.args)
@@ -87,6 +91,55 @@ def rank():
     rankings = []
     for w, t, l in rankedGenes:
         rankings.append({'weight': w, 'nodeType': t, 'label': l})
+
+    ret = {'rankings': rankings,
+           'usedTerms': list(usedTerms),
+           'missingTerms': list(missingTerms)}
+    return jsonify(ret)
+
+@app.route('/deeprank', methods=['POST'])
+def deeprank():
+    '''
+    This is intended to be the workhorse function.  POST needs to include a "term" list that should be HPO terms matching values from the layered graph.
+    '''
+    mydata = request.get_json()
+
+    # "constant" global data
+    mg, restartProb, hpoWeights, bg = getMultigraphVars()
+    hpoTerms = set([str(x) for x in mydata])
+    rankTypes = set(['gene'])
+    
+    # startProbs = {('HPO', h) : hpoWeights[h] for h in hpoTerms}
+    startProbs = {}
+    usedTerms = set([])
+    missingTerms = set([])
+    
+    indivRanks = {}
+    
+    for h in hpoTerms:
+        if h in hpoWeights:
+            startProbs[('HPO', h)] = hpoWeights[h]
+            usedTerms.add(h)
+            
+            #do an individual weighting for each term as we go
+            termWeights = mg.RWR_rank({('HPO', h) : 1.0}, restartProb, rankTypes, bg)
+            for i, (w, t, l) in enumerate(termWeights):
+                if (l not in indivRanks):
+                    indivRanks[l] = {}
+                indivRanks[l][h] = (i+1, w)
+                #residual method for when these were separate values
+                #indivRanks[l][h] = w
+                #indivRanks[l][h+'-RANK'] = (i+1)
+        else:
+            missingTerms.add(h)
+
+    rankedGenes = mg.RWR_rank(startProbs, restartProb, rankTypes, bg)
+
+    rankings = []
+    for i, (w, t, l) in enumerate(rankedGenes):
+        temp = {'weight': w, 'nodeType': t, 'label': l, 'rank': i+1}
+        temp.update(indivRanks[l])
+        rankings.append(temp)
 
     ret = {'rankings': rankings,
            'usedTerms': list(usedTerms),
