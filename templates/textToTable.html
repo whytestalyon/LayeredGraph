@@ -55,13 +55,36 @@
                         $("#table_btn").click(function () {
                             $("#resdiv").empty();
                             $("#resdiv").append("<table id=\"restable\"></table>");
-                
+                            
                             var selectedTerms = $("input[type='checkbox']:checked").map(function(){
-                                return $(this).attr('name');
+                                //return name (HPO ##) and inner text (aka, the conceptual label)
+                                return [$(this).attr('name'), $(this)[0].labels[0].innerText];
                             }).get();
-                            var terms = $(".select2").parent().find("select").val();
-                            var allTerms = terms.concat(selectedTerms);
-                            console.log(allTerms);
+                            
+                            //this just splits the return into HPO ## list and our mouseover text
+                            st2 = [];
+                            mot2 = [];
+                            for (var n in selectedTerms) {
+                                if (n % 2 == 0) {
+                                    st2.push(selectedTerms[n]);
+                                }
+                                else {
+                                    mot2.push(selectedTerms[n]);
+                                }
+                            }
+                            
+                            //add in the one from the typed stuff
+                            var terms = [];
+                            var mot = [];
+                            var selected = $(".select2").parent().find("select")[0];
+                            for (n=0; n < selected.length; n++) {
+                                terms.push(selected[n].value);
+                                mot.push(selected[n].innerText);
+                            }
+                            
+                            //concat everything
+                            var allTerms = terms.concat(st2);
+                            var allMot = mot.concat(mot2);
                             
                             columns = [
                                 {title: "Rank", data: 'rank'},
@@ -70,8 +93,9 @@
                             ];
                             
                             for (t in allTerms) {
-                                columns.push({title: allTerms[t], data: allTerms[t],
-                                             mRender: function(data, type, full){
+                                motText = "<span title=\""+allMot[t]+"\">"+allTerms[t]+"</span>";
+                                columns.push({title: motText, term: allTerms[t], data: allTerms[t],
+                                             mRender: function(data, type, full) {
                                                     if(type == 'display') return data[1]+" ("+data[0]+")";
                                                     else return data[1];
                                                 }});
@@ -100,10 +124,10 @@
                                                 
                                                 //loop through the HPO terms
                                                 for (x=3; x < columns.length; x++) {
-                                                    if(data[columns[x].title][1]*1 > 0) {
+                                                    if(data[columns[x].term][1]*1 > 0) {
                                                         $('td', row).eq(x).addClass('highlight');
                                                     }
-                                                    else if(data[columns[x].title][1]*1 < 0) {
+                                                    else if(data[columns[x].term][1]*1 < 0) {
                                                         $('td', row).eq(x).addClass('revhighlight');
                                                     }
                                                 }
