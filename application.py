@@ -36,12 +36,19 @@ def background():
 
 @app.route('/search')
 def search():
+    '''
+    DEPRECATED
+    This is the original search page MH used
+    '''
     terms = getTermsAndSyns('./HPO_graph_data/hp.obo')
     return render_template('search.html', terms=terms)
 
 @app.route('/')
 @app.route('/text', methods=['GET'])
 def text():
+    '''
+    This is the main page that a user will hit that only performs a search over all terms
+    '''
     return render_template('textToRank.html')
 
 @app.route('/table', methods=['GET'])
@@ -50,6 +57,9 @@ def table():
 
 @app.route('/terms', methods=['GET'])
 def terms():
+    '''
+    This function returns a JSON presentation of the terms that match user typed text
+    '''
     pprint(request.args)
     searchTerm = str(request.args.get('term'))
     hpoTerms = getTermsAndSyns('./HPO_graph_data/hp.obo')
@@ -148,6 +158,10 @@ def deeprank():
 
 @app.route('/text/annotate', methods=['GET'])
 def textannotate():
+    '''
+    This function hits the NIH annotator to pull out HPO terms
+    @return - a JSON response of the HPO terms that were identified
+    '''
     # annotate with HPO terms using the NCBO annotator
     indications_text = str(request.args.get('indications'))
     payload = {'apikey': '8b5b7825-538d-40e0-9e9e-5ab9274a9aeb',
