@@ -53,6 +53,9 @@ def text():
 
 @app.route('/table', methods=['GET'])
 def table():
+    '''
+    This is the page for the table view, it performs a more complex query so it is given its own page
+    '''
     return render_template('textToTable.html')
 
 @app.route('/terms', methods=['GET'])
