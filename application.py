@@ -58,6 +58,13 @@ def table():
     '''
     return render_template('textToTable.html')
 
+@app.route('/ppi', methods=['GET'])
+def ppi():
+    '''
+    This will be a deeprank view for the PPI graph.
+    '''
+    return render_template('protSearch.html')
+
 @app.route('/terms', methods=['GET'])
 def terms():
     '''
@@ -74,6 +81,21 @@ def terms():
         if searchTerm.lower() in hpo.lower():
             options.append({'id': hpo, 'text': (hpo + ' ' + defText)})
 
+    return jsonify({'results': options})
+
+@app.route('/genes', methods=['GET'])
+def genes():
+    '''
+    This function returns a JSON presentation of the genes that match user typed text
+    '''
+    searchTerm = str(request.args.get('term'))
+    protGraph, dummy1, dummy2 = getProtgraphVars()
+    options = list([])
+    
+    for geneName in protGraph.nodes['gene']:
+        if searchTerm.lower() in geneName.lower():
+            options.append({'id': geneName, 'text': geneName})
+    
     return jsonify({'results': options})
 
 @app.route('/rank', methods=['POST'])
@@ -116,7 +138,7 @@ def deeprank():
     This is intended to be the workhorse function.  POST needs to include a "term" list that should be HPO terms matching values from the layered graph.
     '''
     mydata = request.get_json()
-
+    
     # "constant" global data
     mg, restartProb, hpoWeights, bg = getMultigraphVars()
     hpoTerms = set([str(x) for x in mydata])
@@ -145,6 +167,51 @@ def deeprank():
                 #indivRanks[l][h+'-RANK'] = (i+1)
         else:
             missingTerms.add(h)
+
+    rankedGenes = mg.RWR_rank(startProbs, restartProb, rankTypes, bg)
+
+    rankings = []
+    for i, (w, t, l) in enumerate(rankedGenes):
+        temp = {'weight': w, 'nodeType': t, 'label': l, 'rank': i+1}
+        temp.update(indivRanks[l])
+        rankings.append(temp)
+
+    ret = {'rankings': rankings,
+           'usedTerms': list(usedTerms),
+           'missingTerms': list(missingTerms)}
+    return jsonify(ret)
+
+@app.route('/protdeeprank', methods=['POST'])
+def protdeeprank():
+    '''
+    PPI workhorse, POST needs to include a "term" list that are gene names for the PPI graph.
+    '''
+    mydata = request.get_json()
+    
+    # "constant" global data
+    mg, restartProb, bg = getProtgraphVars()
+    genes = set([str(x) for x in mydata])
+    rankTypes = set(['gene'])
+    
+    startProbs = {}
+    usedTerms = set([])
+    missingTerms = set([])
+    
+    indivRanks = {}
+    
+    for gene in genes:
+        if gene in mg.nodes['gene']:
+            startProbs[('gene', gene)] = 1.0
+            usedTerms.add(gene)
+            
+            #do an individual weighting for each term as we go
+            termWeights = mg.RWR_rank({('gene', gene) : 1.0}, restartProb, rankTypes, bg)
+            for i, (w, t, l) in enumerate(termWeights):
+                if (l not in indivRanks):
+                    indivRanks[l] = {}
+                indivRanks[l][gene] = (i+1, w)
+        else:
+            missingTerms.add(gene)
 
     rankedGenes = mg.RWR_rank(startProbs, restartProb, rankTypes, bg)
 
