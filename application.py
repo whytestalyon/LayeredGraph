@@ -192,7 +192,7 @@ def getMultigraphVars():
     '''
     Get any variables that are constant between requests from flask.g.
     Note: I don't think this is doing quite what I want it to because the files are being loaded with each request, but it is relatively fast so moving on for now.
-    @return 
+    @return - tuple of variables (multigraph, restart prob, hpo weights, background weights)
     '''
     if not hasattr(g, 'mg'):
         #load or generate the graph
@@ -213,6 +213,26 @@ def getMultigraphVars():
         g.bg = g.mg.calculateBackground(bgProbs, g.restartProb)
     
     return (g.mg, g.restartProb, g.hpoWeights, g.bg)
+
+def getProtgraphVars():
+    '''
+    Get any variables related to the protein graph from flask.g.
+    @return - tuple of variables (multigraph, restart prob, background weights)
+    '''
+    if not hasattr(g, 'protgraph'):
+        #load the graph
+        pickleGraphFN = './HPO_graph_data/protgraph.pickle'
+        print('Loading from "'+pickleGraphFN+'"')
+        g.protgraph = pickle.load(open(pickleGraphFN, 'rb'))
+    
+    if not hasattr(g, 'protRestartProb'):
+        g.protRestartProb = 0.1
+    
+    if not hasattr(g, 'protBG'):
+        bgProbs = {('gene', v) : 1.0 for v in g.protgraph.nodes['gene']}
+        g.protBG = g.protgraph.calculateBackground(bgProbs, g.protRestartProb)
+    
+    return (g.protgraph, g.protRestartProb, g.protBG)
     
 # run the app.
 if __name__ == "__main__":
@@ -222,3 +242,4 @@ if __name__ == "__main__":
     #initializeLayeredGraph()
 
     app.run(debug=True, host='0.0.0.0')
+    
