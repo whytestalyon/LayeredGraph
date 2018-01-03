@@ -24,7 +24,6 @@
             $("#get_terms").click(function () {
                 $("#annot_res").empty();
                 $("#resdiv").empty();
-                $("#resdiv").append("<table id=\"restable\"></table>");
                 $.getJSON(
                     "/text/annotate",
                     {'indications': $("#indications").val()},
@@ -54,7 +53,7 @@
                         });
                         $("#table_btn").click(function () {
                             $("#resdiv").empty();
-                            $("#resdiv").append("<table id=\"restable\"></table>");
+                            $("#resdiv").append("<table id=\"restable\" class=\"display\"></table>");
                             
                             var selectedTerms = $("input[type='checkbox']:checked").map(function(){
                                 //return name (HPO ##) and inner text (aka, the conceptual label)
@@ -109,7 +108,7 @@
                                     data: JSON.stringify(allTerms),
                                     success: function(data) {
                                         //$("#resdiv").append(JSON.stringify(data, null, '\t'));
-                                        $("#restable").dataTable({
+                                        var table = $("#restable").DataTable({
                                             data: data.rankings,
                                             columns: columns,
                                             order: [[0, 'asc']],
@@ -132,6 +131,18 @@
                                                     }
                                                 }
                                             }
+                                        });
+                                        
+                                        $('#restable tbody').on('click', 'tr', function () {
+                                            if ($(this).hasClass('selected') ) {
+                                                $(this).removeClass('selected');
+                                            }
+                                            else {
+                                                table.$('tr.selected').removeClass('selected');
+                                                $(this).addClass('selected');
+                                            }
+                                            var rowdata = table.row(this).data();
+                                            console.log(rowdata);
                                         });
                                     },
                                     contentType: "application/json",
