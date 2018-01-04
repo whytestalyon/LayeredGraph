@@ -22,7 +22,7 @@
         <script>
             $(document).ready(function() {
                 $('.hpo-select').select2({
-                    minimumInputLength: 4,
+                    minimumInputLength: 2,
                     placeholder: 'Search for gene terms...',
                     ajax: {
                         url: '/genes',
@@ -32,7 +32,7 @@
                 });
                 $("#table_btn").click(function () {
                     $("#resdiv").empty();
-                    $("#resdiv").append("<table id=\"restable\"></table>");
+                    $("#resdiv").append("<table id=\"restable\" class=\"display\"></table>");
                     
                     var allTerms = $(".select2").parent().find("select").val();
                     
@@ -58,7 +58,7 @@
                             url: '/protdeeprank',
                             data: JSON.stringify(allTerms),
                             success: function(data) {
-                                $("#restable").dataTable({
+                                var table = $("#restable").DataTable({
                                     data: data.rankings,
                                     columns: columns,
                                     order: [[0, 'asc']],
@@ -83,6 +83,17 @@
                                     }
                                 });
                                 
+                                $('#restable tbody').on('click', 'tr', function () {
+                                    if ($(this).hasClass('selected') ) {
+                                        $(this).removeClass('selected');
+                                    }
+                                    else {
+                                        table.$('tr.selected').removeClass('selected');
+                                        $(this).addClass('selected');
+                                    }
+                                    var rowdata = table.row(this).data();
+                                    console.log(rowdata);
+                                });
                             },
                             contentType: "application/json",
                             dataType: 'json'

@@ -24,7 +24,6 @@
             $("#get_terms").click(function () {
                 $("#annot_res").empty();
                 $("#resdiv").empty();
-                $("#resdiv").append("<table id=\"restable\"></table>");
                 $.getJSON(
                     "/text/annotate",
                     {'indications': $("#indications").val()},
@@ -54,7 +53,8 @@
                         });
                         $("#table_btn").click(function () {
                             $("#resdiv").empty();
-                            $("#resdiv").append("<table id=\"restable\"></table>");
+                            $("#resdiv").append("<table id=\"restable\" class=\"display\"></table><br/>");
+                            $("#resdiv").append("<div id=\"resclickdiv\"></div>");
                             
                             var selectedTerms = $("input[type='checkbox']:checked").map(function(){
                                 //return name (HPO ##) and inner text (aka, the conceptual label)
@@ -63,28 +63,28 @@
                             
                             //this just splits the return into HPO ## list and our mouseover text
                             st2 = [];
-                            mot2 = [];
+                            mot2 = {};
                             for (var n in selectedTerms) {
                                 if (n % 2 == 0) {
                                     st2.push(selectedTerms[n]);
                                 }
                                 else {
-                                    mot2.push(selectedTerms[n]);
+                                    mot2[selectedTerms[n-1]] = selectedTerms[n];
                                 }
                             }
                             
                             //add in the one from the typed stuff
                             var terms = [];
-                            var mot = [];
+                            var mot = {};
                             var selected = $(".select2").parent().find("select")[0];
                             for (n=0; n < selected.length; n++) {
                                 terms.push(selected[n].value);
-                                mot.push(selected[n].innerText);
+                                mot[selected[n].value] = selected[n].innerText;
                             }
                             
                             //concat everything
                             var allTerms = terms.concat(st2);
-                            var allMot = mot.concat(mot2);
+                            var allMot = Object.assign({}, mot, mot2);
                             
                             columns = [
                                 {title: "Rank", data: 'rank'},
@@ -93,7 +93,7 @@
                             ];
                             
                             for (t in allTerms) {
-                                motText = "<span title=\""+allMot[t]+"\">"+allTerms[t]+"</span>";
+                                motText = "<span title=\""+allMot[allTerms[t]]+"\">"+allTerms[t]+"</span>";
                                 columns.push({title: motText, term: allTerms[t], data: allTerms[t],
                                              mRender: function(data, type, full) {
                                                     if(type == 'display') return data[1]+" ("+data[0]+")";
@@ -109,7 +109,7 @@
                                     data: JSON.stringify(allTerms),
                                     success: function(data) {
                                         //$("#resdiv").append(JSON.stringify(data, null, '\t'));
-                                        $("#restable").dataTable({
+                                        var table = $("#restable").DataTable({
                                             data: data.rankings,
                                             columns: columns,
                                             order: [[0, 'asc']],
@@ -132,6 +132,55 @@
                                                     }
                                                 }
                                             }
+                                        });
+                                        
+                                        $('#restable tbody').on('click', 'tr', function () {
+                                            if ($(this).hasClass('selected') ) {
+                                                $(this).removeClass('selected');
+                                            }
+                                            else {
+                                                table.$('tr.selected').removeClass('selected');
+                                                $(this).addClass('selected');
+                                            }
+                                            var rowdata = table.row(this).data();
+                                            console.log(rowdata);
+                                            
+                                            //$("#resclickdiv").append(rowdata["label"]+"<br/>");
+                                            $("#resclickdiv").empty();
+                                            $("#resclickdiv").append("<h3>"+rowdata.label+"</h3>");
+                                            $("#resclickdiv").append("<table id=\"resclicktable\" class=\"display\"></table><br/>");
+                                            
+                                            clickColumns = [
+                                                {title: "Rank", data: 'rank'},
+                                                {title: "Weight", data: 'weight'},
+                                                {title: "HPO", data: 'hpo_num'},
+                                                {title: "Description", data: 'hpo_desc'}
+                                            ];
+                                            
+                                            clickData = [];
+                                            for (t in allTerms) {
+                                                clickData.push({
+                                                    rank: rowdata[allTerms[t]][0],
+                                                    weight: rowdata[allTerms[t]][1],
+                                                    hpo_num: allTerms[t],
+                                                    hpo_desc: allMot[allTerms[t]]
+                                                });
+                                            }
+                                            
+                                            var clicktable = $('#resclicktable').DataTable({
+                                                data: clickData,
+                                                columns: clickColumns,
+                                                order: [[0, 'asc'], [1, 'desc']],
+                                                createdRow: function(row, data, index) {
+                                                    //do the combined weights
+                                                    if (data.weight*1 > 0) {
+                                                        $('td', row).eq(1).addClass('highlight');
+                                                    }
+                                                    else if (data.weight*1 < 0) {
+                                                        $('td', row).eq(1).addClass('revhighlight');
+                                                    }
+                                                }
+                                            });
                                         });
                                     },
                                     contentType: "application/json",
