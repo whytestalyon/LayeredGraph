@@ -10,6 +10,12 @@
                 font-weight: bold;
                 color: red;
             }
+            
+            #ppigraph {
+                width: 100%;
+                height: 400px;
+                border: 1px solid lightgray;
+            }
         </style>
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
         <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
@@ -18,11 +24,14 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
         <link href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" rel="stylesheet"/>
         <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
         
         <script>
             $(document).ready(function() {
+                //this is the gene input box that pings the server for a list of genes matching user input
                 $('.hpo-select').select2({
-                    minimumInputLength: 2,
+                    minimumInputLength: 1,
                     placeholder: 'Search for gene terms...',
                     ajax: {
                         url: '/genes',
@@ -30,34 +39,43 @@
                         dataType: 'json'
                     }
                 });
+                
+                //the "Table" button on-click should clear out any data there and then re-fill as server info comes in
                 $("#table_btn").click(function () {
+                    //clear, then add space for the PPI graph, the main table, and an on-click table
                     $("#resdiv").empty();
+                    $("#resdiv").append("<div id=\"ppigraph\"></div>");
                     $("#resdiv").append("<table id=\"restable\" class=\"display\"></table>");
+                    $("#resdiv").append("<div id=\"resclickdiv\"></div>");
                     
+                    //get user inputs
                     var allTerms = $(".select2").parent().find("select").val();
                     
-                    columns = [
+                    //prepare what the output table will look like in terms of columns
+                    var columns = [
                         {title: "Rank", data: 'rank'},
                         {title: "Combined", data: 'weight'},
                         {title: "Gene", data: 'label'}
                     ];
                     
-                    for (t in allTerms) {
+                    //add the gene columns, these have slightly different displays than normal
+                    for (var t in allTerms) {
                         columns.push({title: allTerms[t], term: allTerms[t], data: allTerms[t],
-                                             mRender: function(data, type, full) {
-                                                    if(type == 'display') return data[1]+" ("+data[0]+")";
-                                                    else return data[1];
-                                                }});
+                            mRender: function(data, type, full) {
+                                   if(type == 'display') return data[1]+" ("+data[0]+")";
+                                   else return data[1];
+                            }});
                     }
                     
-                    console.log(columns);
-                    
                     console.log(allTerms);
+                    
+                    //hit the PPI deep ranking endpoint
                     $.ajax({
                             type: 'POST',
                             url: '/protdeeprank',
                             data: JSON.stringify(allTerms),
                             success: function(data) {
+                                //first create a DataTable hosting the primary results that is sorted by rank
                                 var table = $("#restable").DataTable({
                                     data: data.rankings,
                                     columns: columns,
@@ -83,17 +101,137 @@
                                     }
                                 });
                                 
+                                //set up our table to have on-clicks that show an easier to read area
                                 $('#restable tbody').on('click', 'tr', function () {
                                     if ($(this).hasClass('selected') ) {
+                                        //this will de-select previous selections and short-circuit out
                                         $(this).removeClass('selected');
+                                        return;
                                     }
                                     else {
+                                        //change selections
                                         table.$('tr.selected').removeClass('selected');
                                         $(this).addClass('selected');
                                     }
+                                    
+                                    //get the values stored in the row
                                     var rowdata = table.row(this).data();
                                     console.log(rowdata);
+                                    
+                                    //clear out our on-click div and then populate with a header for the gene name and the new table space
+                                    $("#resclickdiv").empty();
+                                    $("#resclickdiv").append("<h3>"+rowdata.label+"</h3>");
+                                    $("#resclickdiv").append("<table id=\"resclicktable\" class=\"display\"></table><br/>");
+                                    
+                                    //build up the columns we are going to display
+                                    clickColumns = [
+                                        {title: "Rank", data: 'rank'},
+                                        {title: "Weight", data: 'weight'},
+                                        {title: "Gene", data: 'hpo_num'}
+                                    ];
+                                    
+                                    clickData = [];
+                                    for (var t in allTerms) {
+                                        clickData.push({
+                                            rank: rowdata[allTerms[t]][0],
+                                            weight: rowdata[allTerms[t]][1],
+                                            hpo_num: allTerms[t]
+                                        });
+                                    }
+                                    
+                                    //finally call the DataTable 
+                                    var clicktable = $('#resclicktable').DataTable({
+                                        data: clickData,
+                                        columns: clickColumns,
+                                        order: [[0, 'asc'], [1, 'desc']],
+                                        createdRow: function(row, data, index) {
+                                            //do the combined weights
+                                            if (data.weight*1 > 0) {
+                                                $('td', row).eq(1).addClass('highlight');
+                                            }
+                                            else if (data.weight*1 < 0) {
+                                                $('td', row).eq(1).addClass('revhighlight');
+                                            }
+                                        }
+                                    });
                                 });
+                                
+                                //this container is where our graph will be constructed
+                                var container = $('#ppigraph')[0];
+                                
+                                //create nodes that scale in size by their weight; mouse-over contains details
+                                var gn = [];
+                                for (var geneIndex in data.graphNodes){
+                                    gn.push({
+                                        id: data.graphNodes[geneIndex],
+                                        label: data.graphNodes[geneIndex],
+                                        value: Math.floor(Math.log2(data.rankings[geneIndex].weight))+12,
+                                        title: data.graphNodes[geneIndex]+"<br>Weight: "+data.rankings[geneIndex].weight
+                                    });
+                                }
+                                
+                                //create edges that scale in size by their transition probability; mouse-over contains details
+                                var ge = [];
+                                for (var edgeIndex in data.graphEdges) {
+                                    ge.push({
+                                        id: edgeIndex,
+                                        from: data.graphEdges[edgeIndex][0],
+                                        to: data.graphEdges[edgeIndex][1],
+                                        arrows: "to",
+                                        value: Math.max(1, Math.floor(Math.log(data.graphEdges[edgeIndex][2]))+5),
+                                        title: data.graphEdges[edgeIndex][0]+" -> "+data.graphEdges[edgeIndex][1]+"<br>Weight: "+data.graphEdges[edgeIndex][2]+"<br>Confidence: "+data.graphEdges[edgeIndex][3]
+                                    });
+                                }
+                                
+                                //build the inputs for vis.js
+                                var graphNodes = new vis.DataSet(gn);
+                                var graphEdges = new vis.DataSet(ge);
+                                var graphData = {
+                                    nodes: graphNodes,
+                                    edges: graphEdges
+                                };
+                                
+                                /*
+                                 * node text scales with weight
+                                 * edge width scales with transition probability
+                                 * physics had to be dampened to get the graph to converge to a stable position, may need future tweaking
+                                 */
+                                var options = {
+                                    nodes: {
+                                        scaling: {
+                                            label: {
+                                                enabled: true,
+                                                min: 16,
+                                                max: 28
+                                            }
+                                        }
+                                    },
+                                    edges: {
+                                        scaling: {
+                                            min: 2,
+                                            max: 10,
+                                            customScalingFunction: function (min,max,total,value) {
+                                                if (max === min) {
+                                                    return 0.0;
+                                                }
+                                                else {
+                                                    var scale = 1 / (max - min);
+                                                    return Math.max(0,(value - min)*scale);
+                                                }
+                                            }
+                                        }
+                                    },
+                                    physics: {
+                                        solver: 'repulsion',
+                                        repulsion: {
+                                            damping: 0.1,
+                                            nodeDistance: 200
+                                        }
+                                    }
+                                };
+                                
+                                //this actually builds the whole thing
+                                var network = new vis.Network(container, graphData, options);
                             },
                             contentType: "application/json",
                             dataType: 'json'
