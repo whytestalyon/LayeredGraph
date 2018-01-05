@@ -158,15 +158,19 @@
                                 
                                 //this container is where our graph will be constructed
                                 var container = $('#ppigraph')[0];
+                                var baseColor = "#D2E5FF";
                                 
                                 //create nodes that scale in size by their weight; mouse-over contains details
                                 var gn = [];
                                 for (var geneIndex in data.graphNodes){
+                                    var geneColor = baseColor;
+                                    if (allTerms.indexOf(data.graphNodes[geneIndex]) != -1) geneColor = "#D2FFE5";
                                     gn.push({
                                         id: data.graphNodes[geneIndex],
                                         label: data.graphNodes[geneIndex],
                                         value: Math.floor(Math.log2(data.rankings[geneIndex].weight))+12,
-                                        title: data.graphNodes[geneIndex]+"<br>Weight: "+data.rankings[geneIndex].weight
+                                        title: data.graphNodes[geneIndex]+"<br>Weight: "+data.rankings[geneIndex].weight,
+                                        color: geneColor
                                     });
                                 }
                                 
@@ -179,7 +183,11 @@
                                         to: data.graphEdges[edgeIndex][1],
                                         arrows: "to",
                                         value: Math.max(1, Math.floor(Math.log(data.graphEdges[edgeIndex][2]))+5),
-                                        title: data.graphEdges[edgeIndex][0]+" -> "+data.graphEdges[edgeIndex][1]+"<br>Weight: "+data.graphEdges[edgeIndex][2]+"<br>Confidence: "+data.graphEdges[edgeIndex][3]
+                                        title: data.graphEdges[edgeIndex][0]+" -> "+data.graphEdges[edgeIndex][1]+"<br>Weight: "+data.graphEdges[edgeIndex][2]+"<br>Confidence: "+data.graphEdges[edgeIndex][3],
+                                        color: {
+                                            //this prevents the edges from inheriting a color (aka, they have the same color)
+                                            inherit: false
+                                        }
                                     });
                                 }
                                 
