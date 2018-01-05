@@ -2,16 +2,37 @@
 <html>
 
 <head>
+    <!--Our custom css-->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css')}}">
     <style>
-        td.highlight {
-            font-weight: bold;
-            color: blue;
+        body {
+            font-family: "Roboto", sans-serif;
         }
-        td.revhighlight {
-            font-weight: bold;
-            color: red;
+        
+        #indications {
+            width: 100%;
         }
+        
+        #outputdiv {
+            border: 1px;
+            border-color: gray;
+            border-style: solid;
+        }
+        
+        #resdiv {
+            padding: 20px;
+            margin: auto;
+            width: 90%;
+        }
+        
+        #resclicktable td {
+            word-wrap: break-word;
+        }
+        
     </style>
+    
+    <!--These are for our data formats-->
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -205,6 +226,7 @@
                                             data: data.rankings,
                                             columns: columns,
                                             order: [[0, 'asc']],
+                                            scrollX: true,
                                             createdRow: function ( row, data, index ) {
                                                 //do the combined weights
                                                 if (data.weight*1 > 0) {
@@ -263,6 +285,7 @@
                                                 data: clickData,
                                                 columns: clickColumns,
                                                 order: [[0, 'asc'], [1, 'desc']],
+                                                scrollX: true,
                                                 createdRow: function(row, data, index) {
                                                     //do the combined weights
                                                     if (data.weight*1 > 0) {
@@ -285,12 +308,25 @@
     </script>
 </head>
 <body>
-    <textarea id="indications" name="indications" rows="20" cols="60">Place clinical indications, symptoms, and phenotypes here...</textarea>
-    <br>
-    <button id="get_terms">Get terms</button>
-    <div id="annot_res"></div>
-    <pre id="resdiv">
-        <table id="restable"></table>
-    </pre>
+    <div id="maindiv">
+        <nav>
+            <ul>
+                <li><a class="active" href="/">PyxisMap</a></li>
+                <li><a href="/ppi">PPI</a></li>
+                <li style="float:right"><a href="#about">About</a></li>
+            </ul>
+        </nav>
+        
+        <div id="outputarea">
+            <h2>Phenotype entry:</h2>
+            <textarea id="indications" name="indications" rows="10">Place clinical indications, symptoms, and phenotypes here...</textarea>
+            <br>
+            <button id="get_terms">Get terms</button>
+            <div id="annot_res"></div>
+            <div id="outputdiv">
+                <pre id="resdiv"></pre>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
