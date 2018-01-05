@@ -12,7 +12,7 @@
             }
             
             #ppigraph {
-                width: 100%;
+                width: 80%;
                 height: 400px;
                 border: 1px solid lightgray;
             }
@@ -44,8 +44,8 @@
                 $("#table_btn").click(function () {
                     //clear, then add space for the PPI graph, the main table, and an on-click table
                     $("#resdiv").empty();
-                    $("#resdiv").append("<div id=\"ppigraph\"></div>");
-                    $("#resdiv").append("<table id=\"restable\" class=\"display\"></table>");
+                    $("#resdiv").append("<h3>Interaction Graph - Top 25 Genes</h3><div id=\"ppigraph\"></div>");
+                    $("#resdiv").append("<h3>Full Results</h3><table id=\"restable\" class=\"display\"></table>");
                     $("#resdiv").append("<div id=\"resclickdiv\"></div>");
                     
                     //get user inputs
@@ -120,7 +120,7 @@
                                     
                                     //clear out our on-click div and then populate with a header for the gene name and the new table space
                                     $("#resclickdiv").empty();
-                                    $("#resclickdiv").append("<h3>"+rowdata.label+"</h3>");
+                                    $("#resclickdiv").append("<h3>Interaction scores - \""+rowdata.label+"\"</h3>");
                                     $("#resclickdiv").append("<table id=\"resclicktable\" class=\"display\"></table><br/>");
                                     
                                     //build up the columns we are going to display
