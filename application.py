@@ -162,9 +162,6 @@ def deeprank():
                 if (l not in indivRanks):
                     indivRanks[l] = {}
                 indivRanks[l][h] = (i+1, w)
-                #residual method for when these were separate values
-                #indivRanks[l][h] = w
-                #indivRanks[l][h+'-RANK'] = (i+1)
         else:
             missingTerms.add(h)
 
@@ -220,10 +217,23 @@ def protdeeprank():
         temp = {'weight': w, 'nodeType': t, 'label': l, 'rank': i+1}
         temp.update(indivRanks[l])
         rankings.append(temp)
-
+    
+    graphLimit = 25
+    graphNodes = []
+    graphEdges = []
+    for i, (w, t, l) in enumerate(rankedGenes[:graphLimit]):
+        graphNodes.append(l)
+        for j, (w2, t2, l2) in enumerate(rankedGenes[:graphLimit]):
+            ew = mg.getEdge(t, l, t2, l2, True)
+            conf = mg.getEdge(t, l, t2, l2, False)
+            if ew > 0:
+                graphEdges.append((l, l2, ew, conf))
+    
     ret = {'rankings': rankings,
            'usedTerms': list(usedTerms),
-           'missingTerms': list(missingTerms)}
+           'missingTerms': list(missingTerms),
+           'graphNodes': graphNodes,
+           'graphEdges': graphEdges}
     return jsonify(ret)
 
 @app.route('/text/annotate', methods=['GET'])
