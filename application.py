@@ -13,6 +13,10 @@ import requests
 import xmltodict
 from urllib.parse import urlencode, quote_plus
 from pprint import pprint
+
+#since all creation of Graphs is done from a LayeredGraphAPI subfolder, we have to add it to preserve the pickle data
+import sys
+sys.path.append("LayeredGraphAPI")
 from HPOParser import getTermsAndSyns
 
 app = Flask(__name__)
