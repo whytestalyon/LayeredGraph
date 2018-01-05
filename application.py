@@ -38,15 +38,6 @@ def background():
     
     return jsonify(bg)
 
-@app.route('/search')
-def search():
-    '''
-    DEPRECATED
-    This is the original search page MH used
-    '''
-    terms = getTermsAndSyns('./HPO_graph_data/hp.obo')
-    return render_template('search.html', terms=terms)
-
 @app.route('/')
 @app.route('/text', methods=['GET'])
 def text():
