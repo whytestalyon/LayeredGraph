@@ -39,13 +39,6 @@ def background():
     return jsonify(bg)
 
 @app.route('/')
-@app.route('/text', methods=['GET'])
-def text():
-    '''
-    This is the main page that a user will hit that only performs a search over all terms
-    '''
-    return render_template('textToRank.html')
-
 @app.route('/table', methods=['GET'])
 def table():
     '''
