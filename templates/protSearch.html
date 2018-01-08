@@ -1,20 +1,39 @@
 <!doctype html>
 <html>
     <head>
+        <!--Our custom css-->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css')}}">
         <style>
-            td.highlight {
-                font-weight: bold;
-                color: blue;
+            body {
+                font-family: "Roboto", sans-serif;
             }
-            td.revhighlight {
-                font-weight: bold;
-                color: red;
+            
+            #outputdiv {
+                border: 1px;
+                border-color: gray;
+                border-style: solid;
             }
             
             #ppigraph {
-                width: 80%;
+                border: 1px;
+                border-color: gray;
+                border-style: solid;
                 height: 400px;
-                border: 1px solid lightgray;
+            }
+            
+            #resdiv {
+                padding: 20px;
+                margin: auto;
+                width: 90%;
+            }
+            
+            #restable {
+                min-width: 100%;
+            }
+            
+            #resclicktable {
+                min-width: 100%;
             }
         </style>
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
@@ -80,6 +99,7 @@
                                     data: data.rankings,
                                     columns: columns,
                                     order: [[0, 'asc']],
+                                    scrollX: true,
                                     createdRow: function ( row, data, index ) {
                                         //do the combined weights
                                         if (data.weight*1 > 0) {
@@ -144,6 +164,7 @@
                                         data: clickData,
                                         columns: clickColumns,
                                         order: [[0, 'asc'], [1, 'desc']],
+                                        scrollX: true,
                                         createdRow: function(row, data, index) {
                                             //do the combined weights
                                             if (data.weight*1 > 0) {
@@ -249,9 +270,24 @@
         </script>
     </head>
     <body>
-        <select name="term[]" class="hpo-select" multiple="multiple" style="width: 50%"></select><br>
-        <br>
-        <button id="table_btn">Table</button>
-        <pre id="resdiv"></pre>
+        <div id="maindiv">
+            <nav>
+                <ul>
+                    <li><a href="/">PyxisMap</a></li>
+                    <li><a class="active" href="/ppi">PPI</a></li>
+                    <li style="float:right"><a href="#about">About</a></li>
+                </ul>
+            </nav>
+            
+            <div id="outputarea">
+                <h2>Gene entry:</h2>
+                <select name="term[]" class="hpo-select" multiple="multiple" style="width: 50%"></select><br>
+                <br>
+                <button id="table_btn">Table</button>
+                <div id="outputdiv">
+                    <pre id="resdiv"></pre>
+                </div>
+            </div>
+        </div>
     </body>
 </html>
