@@ -46,265 +46,277 @@
     <script>
         $(document).ready(function () {
             $("#get_terms").click(function () {
-                $("#annot_res").empty();
+                //$("#annot_res").empty();
                 $("#resdiv").empty();
-                $.getJSON(
-                    "/text/annotate",
-                    {'indications': $("#indications").val()},
-                    function (resultJson) {
-                        var fieldSet = "<fieldset id=\"hpofs\"><legend>Terms: </legend>";
-                        $.each(resultJson, function(key, field){
-                            fieldSet +=
-                            "    <label for=\"checkbox-"+key+"\">"+key+" - "+field+"</label>" +
-                            "    <input type=\"checkbox\" name=\""+key+"\" id=\"checkbox-"+key+"\"><br>";
-                        });
-                        fieldSet += "  </fieldset>";
-                        $("#annot_res").append("<h2>Terms from text (select all that apply)</h2>");
-                        $("#annot_res").append(fieldSet);
-                        $("input[type='checkbox']").checkboxradio();
-                        $("#annot_res").append("<h2>Search additional terms not automatically annotated</h2>");
-                        $("#annot_res").append("<select name=\"term[]\" class=\"hpo-select\" multiple=\"multiple\" style=\"width: 50%\"></select><br>");
-                        $("#annot_res").append("<h2>Select output format</h2>");
-                        $("#annot_res").append("<button id=\"html_btn\">HTML</button>");
-                        $("#annot_res").append("<button id=\"json_btn\">JSON</button>");
-                        $("#annot_res").append("<button id=\"genes_btn\">Genes</button>");
-                        $("#annot_res").append("<button id=\"table_btn\">Table</button>");
-                        $('.hpo-select').select2({
-                            minimumInputLength: 4,
-                            placeholder: 'Search for HPO terms...',
-                            ajax: {
-                                url: '/terms',
-                                delay: 300,
-                                dataType: 'json'
+                $.getJSON("/text/annotate", {'indications': $("#indications").val()}, function (resultJson) {
+                    var fieldSet = $("#hpofs");
+                    fieldSet.empty();
+                    fieldSet.append("<legend>Automatically annotated terms (select all that apply):</legend>");
+                    $.each(resultJson, function(key, field) {
+                        fieldSet.append("<label for=\"checkbox-"+key+"\">"+key+" - "+field+"</label>");
+                        fieldSet.append("<input type=\"checkbox\" name=\""+key+"\" id=\"checkbox-"+key+"\"><br>");
+                    });
+                    $("input[type='checkbox']").checkboxradio();
+                });
+            });
+            
+            $('.hpo-select').select2({
+                minimumInputLength: 4,
+                placeholder: 'Search for HPO terms...',
+                ajax: {
+                    url: '/terms',
+                    delay: 300,
+                    dataType: 'json'
+                }
+            });
+            
+            $("#html_btn").click(function () {
+                $("#resdiv").empty();
+                var selectedTerms = $("input[type='checkbox']:checked").map(function(){
+                    return $(this).attr('name');
+                }).get();
+                var terms = $(".select2").parent().find("select").val();
+                var allTerms = terms.concat(selectedTerms);
+                console.log(allTerms);
+                
+                if(allTerms.length === 0) {
+                    alert("No HPO terms are selected.");
+                    return;
+                }
+                
+                $.ajax({
+                        type: 'POST',
+                        url: '/rank',
+                        data: JSON.stringify(allTerms),
+                        success: function(data) {
+                            $("#resdiv").append('Used: ' + JSON.stringify(data.usedTerms).replace("[","{").replace("]","}") + '<br>');
+                            $("#resdiv").append('CSV-used: ' + data.usedTerms.sort() + '<br>');
+                            $("#resdiv").append('Missing: ' + data.missingTerms + '<br><br>');
+
+                            var i;
+                            for (i = 0; i < 20; i++) {
+                                $("#resdiv").append(' ' + data.rankings[i].weight + ' ' + data.rankings[i].nodeType + ' ' + data.rankings[i].label + '<br>');
                             }
-                        });
+                        },
+                        contentType: "application/json",
+                        dataType: 'json'
+                });
+            });
                         
-                        $("#html_btn").click(function () {
-                            $("#resdiv").empty();
-                            var selectedTerms = $("input[type='checkbox']:checked").map(function(){
-                                return $(this).attr('name');
-                            }).get();
-                            var terms = $(".select2").parent().find("select").val();
-                            var allTerms = terms.concat(selectedTerms);
-                            console.log(allTerms);
-                            $.ajax({
-                                    type: 'POST',
-                                    url: '/rank',
-                                    data: JSON.stringify(allTerms),
-                                    success: function(data) {
-                                        $("#resdiv").append('Used: ' + JSON.stringify(data.usedTerms).replace("[","{").replace("]","}") + '<br>');
-                                        $("#resdiv").append('CSV-used: ' + data.usedTerms.sort() + '<br>');
-                                        $("#resdiv").append('Missing: ' + data.missingTerms + '<br><br>');
+            $("#json_btn").click(function () {
+                $("#resdiv").empty();
+                var selectedTerms = $("input[type='checkbox']:checked").map(function(){
+                    return $(this).attr('name');
+                }).get();
+                var terms = $(".select2").parent().find("select").val();
+                var allTerms = terms.concat(selectedTerms);
+                console.log(allTerms);
+                
+                if(allTerms.length === 0) {
+                    alert("No HPO terms are selected.");
+                    return;
+                }
+                
+                $.ajax({
+                        type: 'POST',
+                        url: '/rank',
+                        data: JSON.stringify(allTerms),
+                        success: function(data) {
+                            $("#resdiv").append(JSON.stringify(data, null, '\t'));
+                        },
+                        contentType: "application/json",
+                        dataType: 'json'
+                });
+            });
+                        
+            $("#genes_btn").click(function () {
+                $("#resdiv").empty();
+                var selectedTerms = $("input[type='checkbox']:checked").map(function(){
+                    return $(this).attr('name');
+                }).get();
+                var terms = $(".select2").parent().find("select").val();
+                var allTerms = terms.concat(selectedTerms);
+                console.log(allTerms);
+                
+                if(allTerms.length === 0) {
+                    alert("No HPO terms are selected.");
+                    return;
+                }
+                
+                $.ajax({
+                        type: 'POST',
+                        url: '/rank',
+                        data: JSON.stringify(allTerms),
+                        success: function(data) {
+                            $("#resdiv").append('Used: ' + JSON.stringify(data.usedTerms).replace("[","{").replace("]","}") + '<br>');
+                            $("#resdiv").append('CSV-used: ' + data.usedTerms.sort() + '<br>');
+                            $("#resdiv").append('Missing: ' + data.missingTerms + '<br><br>');
 
-                                        var i;
-                                        for (i = 0; i < 20; i++) {
-                                            $("#resdiv").append(' ' + data.rankings[i].weight + ' ' + data.rankings[i].nodeType + ' ' + data.rankings[i].label + '<br>');
+                            var genes = [];
+                            data.rankings.forEach(function (t) { genes.push(t.label); });
+                            $("#resdiv").append("<h4>Top 20 genes</h4>");
+                            $("#resdiv").append(genes.slice(0, 20).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                            $("#resdiv").append("<h4>Top 50 genes</h4>");
+                            $("#resdiv").append(genes.slice(0, 50).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                            $("#resdiv").append("<h4>Top 100 genes</h4>");
+                            $("#resdiv").append(genes.slice(0, 100).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                            $("#resdiv").append("<h4>Top 500 genes</h4>");
+                            $("#resdiv").append(genes.slice(0, 500).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                            $("#resdiv").append("<h4>Top 1000 genes</h4>");
+                            $("#resdiv").append(genes.slice(0, 1000).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                            $("#resdiv").append("<h4>Top 2000 genes</h4>");
+                            $("#resdiv").append(genes.slice(0, 2000).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                            $("#resdiv").append("<h4>Top 5000 genes</h4>");
+                            $("#resdiv").append(genes.slice(0, 5000).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                            $("#resdiv").append("<h4>All genes</h4>");
+                            $("#resdiv").append(genes.toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                        },
+                        contentType: "application/json",
+                        dataType: 'json'
+                });
+            });
+                        
+            $("#table_btn").click(function () {
+                $("#resdiv").empty();
+                $("#resdiv").append("<table id=\"restable\" class=\"display\"></table><br/>");
+                $("#resdiv").append("<div id=\"resclickdiv\"></div>");
+                
+                var selectedTerms = $("input[type='checkbox']:checked").map(function(){
+                    //return name (HPO ##) and inner text (aka, the conceptual label)
+                    return [$(this).attr('name'), $(this)[0].labels[0].innerText];
+                }).get();
+                
+                //this just splits the return into HPO ## list and our mouseover text
+                st2 = [];
+                mot2 = {};
+                for (var n in selectedTerms) {
+                    if (n % 2 == 0) {
+                        st2.push(selectedTerms[n]);
+                    }
+                    else {
+                        mot2[selectedTerms[n-1]] = selectedTerms[n];
+                    }
+                }
+                
+                //add in the one from the typed stuff
+                var terms = [];
+                var mot = {};
+                var selected = $(".select2").parent().find("select")[0];
+                for (n=0; n < selected.length; n++) {
+                    terms.push(selected[n].value);
+                    mot[selected[n].value] = selected[n].innerText;
+                }
+                
+                //concat everything
+                var allTerms = terms.concat(st2);
+                var allMot = Object.assign({}, mot, mot2);
+                
+                if(allTerms.length === 0) {
+                    alert("No HPO terms are selected.");
+                    return;
+                }
+                
+                columns = [
+                    {title: "Rank", data: 'rank'},
+                    {title: "Combined", data: 'weight'},
+                    {title: "Gene", data: 'label'}
+                ];
+                
+                for (t in allTerms) {
+                    motText = "<span title=\""+allMot[allTerms[t]]+"\">"+allTerms[t]+"</span>";
+                    columns.push({title: motText, term: allTerms[t], data: allTerms[t],
+                                 mRender: function(data, type, full) {
+                                        if(type == 'display') return data[1]+" ("+data[0]+")";
+                                        else return data[1];
+                                    }});
+                }
+                
+                console.log(columns);
+                
+                $.ajax({
+                        type: 'POST',
+                        url: '/deeprank',
+                        data: JSON.stringify(allTerms),
+                        success: function(data) {
+                            //$("#resdiv").append(JSON.stringify(data, null, '\t'));
+                            var table = $("#restable").DataTable({
+                                data: data.rankings,
+                                columns: columns,
+                                order: [[0, 'asc']],
+                                scrollX: true,
+                                createdRow: function ( row, data, index ) {
+                                    //do the combined weights
+                                    if (data.weight*1 > 0) {
+                                        $('td', row).eq(1).addClass('highlight');
+                                    }
+                                    else if (data.weight*1 < 0) {
+                                        $('td', row).eq(1).addClass('revhighlight');
+                                    }
+                                    
+                                    //loop through the HPO terms
+                                    for (x=3; x < columns.length; x++) {
+                                        if(data[columns[x].term][1]*1 > 0) {
+                                            $('td', row).eq(x).addClass('highlight');
                                         }
-                                    },
-                                    contentType: "application/json",
-                                    dataType: 'json'
+                                        else if(data[columns[x].term][1]*1 < 0) {
+                                            $('td', row).eq(x).addClass('revhighlight');
+                                        }
+                                    }
+                                }
                             });
-                        });
-                        
-                        $("#json_btn").click(function () {
-                            $("#resdiv").empty();
-                            var selectedTerms = $("input[type='checkbox']:checked").map(function(){
-                                return $(this).attr('name');
-                            }).get();
-                            var terms = $(".select2").parent().find("select").val();
-                            var allTerms = terms.concat(selectedTerms);
-                            console.log(allTerms);
-                            $.ajax({
-                                    type: 'POST',
-                                    url: '/rank',
-                                    data: JSON.stringify(allTerms),
-                                    success: function(data) {
-                                        $("#resdiv").append(JSON.stringify(data, null, '\t'));
-                                    },
-                                    contentType: "application/json",
-                                    dataType: 'json'
-                            });
-                        });
-                        
-                        $("#genes_btn").click(function () {
-                            $("#resdiv").empty();
-                            var selectedTerms = $("input[type='checkbox']:checked").map(function(){
-                                return $(this).attr('name');
-                            }).get();
-                            var terms = $(".select2").parent().find("select").val();
-                            var allTerms = terms.concat(selectedTerms);
-                            console.log(allTerms);
-                            $.ajax({
-                                    type: 'POST',
-                                    url: '/rank',
-                                    data: JSON.stringify(allTerms),
-                                    success: function(data) {
-                                        $("#resdiv").append('Used: ' + JSON.stringify(data.usedTerms).replace("[","{").replace("]","}") + '<br>');
-                                        $("#resdiv").append('CSV-used: ' + data.usedTerms.sort() + '<br>');
-                                        $("#resdiv").append('Missing: ' + data.missingTerms + '<br><br>');
-
-                                        var genes = [];
-                                        data.rankings.forEach(function (t) { genes.push(t.label); });
-                                        $("#resdiv").append("<h4>Top 20 genes</h4>");
-                                        $("#resdiv").append(genes.slice(0, 20).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                                        $("#resdiv").append("<h4>Top 50 genes</h4>");
-                                        $("#resdiv").append(genes.slice(0, 50).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                                        $("#resdiv").append("<h4>Top 100 genes</h4>");
-                                        $("#resdiv").append(genes.slice(0, 100).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                                        $("#resdiv").append("<h4>Top 500 genes</h4>");
-                                        $("#resdiv").append(genes.slice(0, 500).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                                        $("#resdiv").append("<h4>Top 1000 genes</h4>");
-                                        $("#resdiv").append(genes.slice(0, 1000).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                                        $("#resdiv").append("<h4>Top 2000 genes</h4>");
-                                        $("#resdiv").append(genes.slice(0, 2000).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                                        $("#resdiv").append("<h4>Top 5000 genes</h4>");
-                                        $("#resdiv").append(genes.slice(0, 5000).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                                        $("#resdiv").append("<h4>All genes</h4>");
-                                        $("#resdiv").append(genes.toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                                    },
-                                    contentType: "application/json",
-                                    dataType: 'json'
-                            });
-                        });
-                        
-                        $("#table_btn").click(function () {
-                            $("#resdiv").empty();
-                            $("#resdiv").append("<table id=\"restable\" class=\"display\"></table><br/>");
-                            $("#resdiv").append("<div id=\"resclickdiv\"></div>");
                             
-                            var selectedTerms = $("input[type='checkbox']:checked").map(function(){
-                                //return name (HPO ##) and inner text (aka, the conceptual label)
-                                return [$(this).attr('name'), $(this)[0].labels[0].innerText];
-                            }).get();
-                            
-                            //this just splits the return into HPO ## list and our mouseover text
-                            st2 = [];
-                            mot2 = {};
-                            for (var n in selectedTerms) {
-                                if (n % 2 == 0) {
-                                    st2.push(selectedTerms[n]);
+                            $('#restable tbody').on('click', 'tr', function () {
+                                if ($(this).hasClass('selected') ) {
+                                    $(this).removeClass('selected');
                                 }
                                 else {
-                                    mot2[selectedTerms[n-1]] = selectedTerms[n];
+                                    table.$('tr.selected').removeClass('selected');
+                                    $(this).addClass('selected');
                                 }
-                            }
-                            
-                            //add in the one from the typed stuff
-                            var terms = [];
-                            var mot = {};
-                            var selected = $(".select2").parent().find("select")[0];
-                            for (n=0; n < selected.length; n++) {
-                                terms.push(selected[n].value);
-                                mot[selected[n].value] = selected[n].innerText;
-                            }
-                            
-                            //concat everything
-                            var allTerms = terms.concat(st2);
-                            var allMot = Object.assign({}, mot, mot2);
-                            
-                            columns = [
-                                {title: "Rank", data: 'rank'},
-                                {title: "Combined", data: 'weight'},
-                                {title: "Gene", data: 'label'}
-                            ];
-                            
-                            for (t in allTerms) {
-                                motText = "<span title=\""+allMot[allTerms[t]]+"\">"+allTerms[t]+"</span>";
-                                columns.push({title: motText, term: allTerms[t], data: allTerms[t],
-                                             mRender: function(data, type, full) {
-                                                    if(type == 'display') return data[1]+" ("+data[0]+")";
-                                                    else return data[1];
-                                                }});
-                            }
-                            
-                            console.log(columns);
-                            
-                            $.ajax({
-                                    type: 'POST',
-                                    url: '/deeprank',
-                                    data: JSON.stringify(allTerms),
-                                    success: function(data) {
-                                        //$("#resdiv").append(JSON.stringify(data, null, '\t'));
-                                        var table = $("#restable").DataTable({
-                                            data: data.rankings,
-                                            columns: columns,
-                                            order: [[0, 'asc']],
-                                            scrollX: true,
-                                            createdRow: function ( row, data, index ) {
-                                                //do the combined weights
-                                                if (data.weight*1 > 0) {
-                                                    $('td', row).eq(1).addClass('highlight');
-                                                }
-                                                else if (data.weight*1 < 0) {
-                                                    $('td', row).eq(1).addClass('revhighlight');
-                                                }
-                                                
-                                                //loop through the HPO terms
-                                                for (x=3; x < columns.length; x++) {
-                                                    if(data[columns[x].term][1]*1 > 0) {
-                                                        $('td', row).eq(x).addClass('highlight');
-                                                    }
-                                                    else if(data[columns[x].term][1]*1 < 0) {
-                                                        $('td', row).eq(x).addClass('revhighlight');
-                                                    }
-                                                }
-                                            }
-                                        });
-                                        
-                                        $('#restable tbody').on('click', 'tr', function () {
-                                            if ($(this).hasClass('selected') ) {
-                                                $(this).removeClass('selected');
-                                            }
-                                            else {
-                                                table.$('tr.selected').removeClass('selected');
-                                                $(this).addClass('selected');
-                                            }
-                                            var rowdata = table.row(this).data();
-                                            console.log(rowdata);
-                                            
-                                            //$("#resclickdiv").append(rowdata["label"]+"<br/>");
-                                            $("#resclickdiv").empty();
-                                            $("#resclickdiv").append("<h3>"+rowdata.label+"</h3>");
-                                            $("#resclickdiv").append("<table id=\"resclicktable\" class=\"display\"></table><br/>");
-                                            
-                                            clickColumns = [
-                                                {title: "Rank", data: 'rank'},
-                                                {title: "Weight", data: 'weight'},
-                                                {title: "HPO", data: 'hpo_num'},
-                                                {title: "Description", data: 'hpo_desc'}
-                                            ];
-                                            
-                                            clickData = [];
-                                            for (t in allTerms) {
-                                                clickData.push({
-                                                    rank: rowdata[allTerms[t]][0],
-                                                    weight: rowdata[allTerms[t]][1],
-                                                    hpo_num: allTerms[t],
-                                                    hpo_desc: allMot[allTerms[t]]
-                                                });
-                                            }
-                                            
-                                            var clicktable = $('#resclicktable').DataTable({
-                                                data: clickData,
-                                                columns: clickColumns,
-                                                order: [[0, 'asc'], [1, 'desc']],
-                                                scrollX: true,
-                                                createdRow: function(row, data, index) {
-                                                    //do the combined weights
-                                                    if (data.weight*1 > 0) {
-                                                        $('td', row).eq(1).addClass('highlight');
-                                                    }
-                                                    else if (data.weight*1 < 0) {
-                                                        $('td', row).eq(1).addClass('revhighlight');
-                                                    }
-                                                }
-                                            });
-                                        });
-                                    },
-                                    contentType: "application/json",
-                                    dataType: 'json'
+                                var rowdata = table.row(this).data();
+                                console.log(rowdata);
+                                
+                                //$("#resclickdiv").append(rowdata["label"]+"<br/>");
+                                $("#resclickdiv").empty();
+                                $("#resclickdiv").append("<h3>"+rowdata.label+"</h3>");
+                                $("#resclickdiv").append("<table id=\"resclicktable\" class=\"display\"></table><br/>");
+                                
+                                clickColumns = [
+                                    {title: "Rank", data: 'rank'},
+                                    {title: "Weight", data: 'weight'},
+                                    {title: "HPO", data: 'hpo_num'},
+                                    {title: "Description", data: 'hpo_desc'}
+                                ];
+                                
+                                clickData = [];
+                                for (t in allTerms) {
+                                    clickData.push({
+                                        rank: rowdata[allTerms[t]][0],
+                                        weight: rowdata[allTerms[t]][1],
+                                        hpo_num: allTerms[t],
+                                        hpo_desc: allMot[allTerms[t]]
+                                    });
+                                }
+                                
+                                var clicktable = $('#resclicktable').DataTable({
+                                    data: clickData,
+                                    columns: clickColumns,
+                                    order: [[0, 'asc'], [1, 'desc']],
+                                    scrollX: true,
+                                    createdRow: function(row, data, index) {
+                                        //do the combined weights
+                                        if (data.weight*1 > 0) {
+                                            $('td', row).eq(1).addClass('highlight');
+                                        }
+                                        else if (data.weight*1 < 0) {
+                                            $('td', row).eq(1).addClass('revhighlight');
+                                        }
+                                    }
+                                });
                             });
-                    });
+                        },
+                        contentType: "application/json",
+                        dataType: 'json'
                 });
             });
         });
@@ -321,11 +333,22 @@
         </nav>
         
         <div id="outputarea">
-            <h2>Phenotype entry:</h2>
+            <h2>Automatic phenotype annotation:</h2>
             <textarea id="indications" name="indications" rows="10">Place clinical indications, symptoms, and phenotypes here...</textarea>
             <br>
             <button id="get_terms">Get terms</button>
-            <div id="annot_res"></div>
+            <div id="annot_res">
+                <fieldset id="hpofs">
+                    <legend>Automatically annotated terms (select all that apply):</legend>
+                </fieldset>
+                <h2>Search additional terms not automatically annotated:</h2>
+                <select name="term[]" class="hpo-select" multiple="multiple" style="width: 50%"></select><br>
+                <h2>Select output format</h2>
+                <button id="html_btn">HTML</button>
+                <button id="json_btn">JSON</button>
+                <button id="genes_btn">Genes</button>
+                <button id="table_btn">Table</button>
+            </div>
             <div id="outputdiv">
                 <pre id="resdiv"></pre>
             </div>
