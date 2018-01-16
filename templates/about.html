@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+    <head>
+        <!--Our custom css-->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css')}}">
+        <style>
+            body {
+                font-family: "Roboto", sans-serif;
+                background-image: url("{{ url_for('static', filename='img/dna-compass.png')}}");
+                background-repeat: no-repeat;
+                background-attachment: scroll;
+                background-position: top right;
+                background-size: 240px 240px;
+            }
+        </style>
+        
+        <!-- js libraries w/css styles -->
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        
+        <script>
+            $(document).ready(function() {
+                
+            });
+        </script>
+    </head>
+    <body>
+        <div id="maindiv">
+            <nav>
+                <ul>
+                    <li><a href="/">PyxisMap</a></li>
+                    <li><a href="/ppi">PPI</a></li>
+                    <li style="float:right"><a class="active" href="/about">About</a></li>
+                </ul>
+            </nav>
+            
+            <div id="outputarea">
+                <h2>About:</h2>
+                
+            </div>
+        </div>
+    </body>
+</html>

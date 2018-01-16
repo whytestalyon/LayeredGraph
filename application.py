@@ -53,6 +53,13 @@ def ppi():
     '''
     return render_template('protSearch.html')
 
+@app.route('/about', methods=['GET'])
+def about():
+    '''
+    Get the about page
+    '''
+    return render_template('about.html')
+
 @app.route('/terms', methods=['GET'])
 def terms():
     '''
