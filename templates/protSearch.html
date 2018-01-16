@@ -7,12 +7,18 @@
         <style>
             body {
                 font-family: "Roboto", sans-serif;
+                background-image: url("{{ url_for('static', filename='img/dna-compass.png')}}");
+                background-repeat: no-repeat;
+                background-attachment: scroll;
+                background-position: top right;
+                background-size: 240px 240px;
             }
             
             #outputdiv {
                 border: 1px;
                 border-color: gray;
                 border-style: solid;
+                background: white;
             }
             
             #ppigraph {
@@ -63,7 +69,9 @@
                 $("#table_btn").click(function () {
                     //clear, then add space for the PPI graph, the main table, and an on-click table
                     $("#resdiv").empty();
-                    $("#resdiv").append("<h3>Interaction Graph - Top 25 Genes</h3><div id=\"ppigraph\"></div>");
+                    $("#resdiv").append("<h3>Interaction Graph - Top 25 Genes</h3><br>");
+                    $("#resdiv").append("<input id=\"physicsCB\" type=\"checkbox\" checked=\"checked\">Physics Enabled");
+                    $("#resdiv").append("<div id=\"ppigraph\"></div>");
                     $("#resdiv").append("<h3>Full Results</h3><table id=\"restable\" class=\"display\"></table>");
                     $("#resdiv").append("<div id=\"resclickdiv\"></div>");
                     
@@ -261,6 +269,24 @@
                                 
                                 //this actually builds the whole thing
                                 var network = new vis.Network(container, graphData, options);
+                                /*
+                                //This will set the network to automatically have no physics after the initial load, leaving here for now
+                                network.on("stabilizationIterationsDone", function () {
+                                    network.setOptions({
+                                        physics: {
+                                            enabled: false
+                                        }
+                                    });
+                                });
+                                */
+                                $("#physicsCB").change(function(){
+                                    var enabled = $(this).is(":checked");
+                                    network.setOptions({
+                                        physics: {
+                                            enabled: enabled
+                                        }
+                                    });
+                                });
                             },
                             contentType: "application/json",
                             dataType: 'json'
