@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+    <head>
+        <!--Our custom css-->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css')}}">
+        <style>
+            body {
+                font-family: "Roboto", sans-serif;
+                background-image: url("{{ url_for('static', filename='img/dna-compass.png')}}");
+                background-repeat: no-repeat;
+                background-attachment: scroll;
+                background-position: top right;
+                background-size: 240px 240px;
+            }
+            
+            #outputarea {
+                width: 80%;
+                border: 1px;
+                border-color: gray;
+                border-style: solid;
+                background: white;
+                padding: 20px;
+                margin: auto;
+            }
+        </style>
+        
+        <!-- js libraries w/css styles -->
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        
+        <script>
+            $(document).ready(function() {
+                
+            });
+        </script>
+    </head>
+    <body>
+        <div id="maindiv">
+            <nav>
+                <ul>
+                    <li><a href="/">PyxisMap</a></li>
+                    <li><a href="/ppi">PPI</a></li>
+                    <li style="float:right"><a class="active" href="/about">About</a></li>
+                </ul>
+            </nav>
+            
+            <div id="outputarea">
+                <h2>About PyxisMap:</h2>
+                <p>
+                    PyxisMap is a collection of tools based on navigating complex biological networks using graph traversal algorithms.  The main <a href="/">PyxisMap</a>
+                    tool is built by combining phenotype relationships from the <a href="http://human-phenotype-ontology.github.io">Human Phenotype Ontology (HPO)</a> with phenotype-to-gene relationships from
+                    the HPO and <a href="https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator">PubTator</a>.  This enables researchers to select relevant phenotypes and retrieve a ranking of genes most related to that set
+                    of phenotypes.  Additionally, the <a href="https://bioportal.bioontology.org/annotator">National Center for Biomedical Ontology (NCBO) Annotator</a> is connected, allowing for automatic parsing
+                    of plain text (such as a clinical synopsis) to HPO terms.
+                </p>
+                <p>
+                    PyxisMap also includes a <a href="/ppi">Protein-Protein Interaction (PPI)</a> network.  This network is built from the <a href="http://consensuspathdb.org">ConsensusPathDB</a>
+                    protein-protein interactions.  This enables researchers to select relevant genes and identify connections between their proteins.  This tool
+                    includes a visual representation of the top hits from the PPI network.
+                </p>
+                <h4>Citing PyxisMap:</h4>
+                <p>Paper forthcoming</p>
+                
+                <h4>Contact:</h4>
+                <ul>
+                    <li>J. Matthew Holt - <a href="mailto:jholt@hudsonalpha.org">jholt@hudsonalpha.org</a></li>
+                    <li>Brandon Wilk - <a href="mailto:bwilk@hudsonalpha.org">bwilk@hudsonalpha.org</a></li>
+                </ul>
+                
+            </div>
+        </div>
+    </body>
+</html>

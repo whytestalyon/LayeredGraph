@@ -13,6 +13,10 @@ import requests
 import xmltodict
 from urllib.parse import urlencode, quote_plus
 from pprint import pprint
+
+#since all creation of Graphs is done from a LayeredGraphAPI subfolder, we have to add it to preserve the pickle data
+import sys
+sys.path.append("LayeredGraphAPI")
 from HPOParser import getTermsAndSyns
 
 app = Flask(__name__)
@@ -34,23 +38,7 @@ def background():
     
     return jsonify(bg)
 
-@app.route('/search')
-def search():
-    '''
-    DEPRECATED
-    This is the original search page MH used
-    '''
-    terms = getTermsAndSyns('./HPO_graph_data/hp.obo')
-    return render_template('search.html', terms=terms)
-
 @app.route('/')
-@app.route('/text', methods=['GET'])
-def text():
-    '''
-    This is the main page that a user will hit that only performs a search over all terms
-    '''
-    return render_template('textToRank.html')
-
 @app.route('/table', methods=['GET'])
 def table():
     '''
@@ -64,6 +52,13 @@ def ppi():
     This will be a deeprank view for the PPI graph.
     '''
     return render_template('protSearch.html')
+
+@app.route('/about', methods=['GET'])
+def about():
+    '''
+    Get the about page
+    '''
+    return render_template('about.html')
 
 @app.route('/terms', methods=['GET'])
 def terms():
