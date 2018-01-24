@@ -75,6 +75,11 @@
                     //get user inputs
                     var allTerms = $(".select2").parent().find("select").val();
                     
+                    if(allTerms.length === 0) {
+                        alert("No genes are selected.");
+                        return;
+                    }
+                    
                     //prepare what the output table will look like in terms of columns
                     var columns = [
                         {title: "Rank", data: 'rank'},

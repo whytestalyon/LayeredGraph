@@ -93,7 +93,7 @@
                 var selectedTerms = $("input[type='checkbox']:checked").map(function(){
                     return $(this).attr('name');
                 }).get();
-                var terms = $(".select2").parent().find("select").val();
+                var terms = $('.hpo-select').select2('data').map(function(currentValue){ return currentValue.id;});
                 var allTerms = terms.concat(selectedTerms);
                 console.log(allTerms);
                 
@@ -133,7 +133,7 @@
                 var selectedTerms = $("input[type='checkbox']:checked").map(function(){
                     return $(this).attr('name');
                 }).get();
-                var terms = $(".select2").parent().find("select").val();
+                var terms = $('.hpo-select').select2('data').map(function(currentValue){ return currentValue.id;});
                 var allTerms = terms.concat(selectedTerms);
                 console.log(allTerms);
                 
@@ -166,7 +166,7 @@
                 var selectedTerms = $("input[type='checkbox']:checked").map(function(){
                     return $(this).attr('name');
                 }).get();
-                var terms = $(".select2").parent().find("select").val();
+                var terms = $('.hpo-select').select2('data').map(function(currentValue){ return currentValue.id;});
                 var allTerms = terms.concat(selectedTerms);
                 console.log(allTerms);
                 
@@ -237,10 +237,12 @@
                 //add in the one from the typed stuff
                 var terms = [];
                 var mot = {};
-                var selected = $(".select2").parent().find("select")[0];
+                
+                var selected = $('.hpo-select').select2('data');
+                
                 for (n=0; n < selected.length; n++) {
-                    terms.push(selected[n].value);
-                    mot[selected[n].value] = selected[n].innerText;
+                    terms.push(selected[n].id);
+                    mot[selected[n].id] = selected[n].text;
                 }
                 
                 //concat everything
