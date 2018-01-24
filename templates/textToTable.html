@@ -52,16 +52,28 @@
     <script>
         $(document).ready(function () {
             $("#get_terms").click(function () {
+                var fieldSet = $("#hpofs-output");
+                fieldSet.empty();
+                message = "Contacting annotator...";
+                fieldSet.append("<h4 style=\"color: blue;\">"+message+"</h4>");
+                
                 //$("#annot_res").empty();
                 $("#resdiv").empty();
                 $.getJSON("/text/annotate", {'indications': $("#indications").val()}, function (resultJson) {
-                    var fieldSet = $("#hpofs");
+                    var fieldSet = $("#hpofs-output");
                     fieldSet.empty();
-                    fieldSet.append("<legend>Automatically annotated terms (select all that apply):</legend>");
-                    $.each(resultJson, function(key, field) {
-                        fieldSet.append("<label for=\"checkbox-"+key+"\">"+key+" - "+field+"</label>");
-                        fieldSet.append("<input type=\"checkbox\" name=\""+key+"\" id=\"checkbox-"+key+"\"><br>");
-                    });
+                    
+                    if(resultJson.annotatorStatus == 200){
+                        $.each(resultJson.terms, function(key, field) {
+                            fieldSet.append("<label for=\"checkbox-"+key+"\">"+key+" - "+field+"</label>");
+                            fieldSet.append("<input type=\"checkbox\" name=\""+key+"\" id=\"checkbox-"+key+"\"><br>");
+                        });
+                    }
+                    else {
+                        message = "Received "+resultJson.annotatorStatus+" error from Annotator, use manual entry to bypass.";
+                        message += " If the problem persists, contact PyxisMap developers.";
+                        fieldSet.append("<h4 style=\"color: red;\">"+message+"</h4>");
+                    }
                     $("input[type='checkbox']").checkboxradio();
                 });
             });
@@ -346,6 +358,7 @@
             <div id="annot_res">
                 <fieldset id="hpofs">
                     <legend>Automatically annotated terms (select all that apply):</legend>
+                    <div id="hpofs-output"></div>
                 </fieldset>
                 <h2>Search additional terms not automatically annotated:</h2>
                 <select name="term[]" class="hpo-select" multiple="multiple" style="width: 50%"></select><br>
