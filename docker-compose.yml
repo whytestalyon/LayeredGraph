@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+    fixtures:
+        image: docker-registry.haib.org/sdi/layered-graph-fixtures
+    rest:
+        image: docker-registry.haib.org/sdi/layered-graph-server
+        volumes_from:
+          - fixtures
+        ports:
+            - "5000:5000"

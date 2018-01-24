@@ -1,0 +1,11 @@
+FROM centos:7
+MAINTAINER bwilk@hudsonalpha.org
+
+RUN mkdir /LayeredGraph
+RUN mkdir /LayeredGraph/HPO_graph_data
+
+COPY HPO_graph_data/* /LayeredGraph/HPO_graph_data/
+
+VOLUME /LayeredGraph/HPO_graph_data
+
+ENTRYPOINT ["echo", "Data only container for mariaDB"]
