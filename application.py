@@ -244,9 +244,13 @@ def textannotate():
                'ontologies': 'HP',
                'whole_word_only': 'false'}
     url = 'http://data.bioontology.org/annotator?' + urlencode(payload, quote_via=quote_plus)
-    resp = requests.get(url)
-    
-    returnCode = resp.json()['status']
+    try:
+        resp = requests.get(url)
+    except Exception as e:
+        print("Python Exception: "+str(e))
+        return jsonify({'annotatorStatus': 'UNKNOWN', 'terms': {}})
+        
+    returnCode = resp.status_code
     
     # get definitions of HPO terms
     hpoTerms = getTermsAndSyns('./HPO_graph_data/hp.obo')
