@@ -59,22 +59,31 @@
                 
                 //$("#annot_res").empty();
                 $("#resdiv").empty();
-                $.getJSON("/text/annotate", {'indications': $("#indications").val()}, function (resultJson) {
+                $.getJSON("/text/annotate",
+                    {'indications': $("#indications").val()},
+                    function (resultJson) {
+                        var fieldSet = $("#hpofs-output");
+                        fieldSet.empty();
+                        
+                        if(resultJson.annotatorStatus == 200){
+                            $.each(resultJson.terms, function(key, field) {
+                                fieldSet.append("<label for=\"checkbox-"+key+"\">"+key+" - "+field+"</label>");
+                                fieldSet.append("<input type=\"checkbox\" name=\""+key+"\" id=\"checkbox-"+key+"\"><br>");
+                            });
+                        }
+                        else {
+                            message = "Received "+resultJson.annotatorStatus+" error from Annotator, use manual entry to bypass.";
+                            message += " If the problem persists, contact PyxisMap developers.";
+                            fieldSet.append("<h4 style=\"color: red;\">"+message+"</h4>");
+                        }
+                        $("input[type='checkbox']").checkboxradio();
+                    }
+                ).fail(function() {
                     var fieldSet = $("#hpofs-output");
                     fieldSet.empty();
-                    
-                    if(resultJson.annotatorStatus == 200){
-                        $.each(resultJson.terms, function(key, field) {
-                            fieldSet.append("<label for=\"checkbox-"+key+"\">"+key+" - "+field+"</label>");
-                            fieldSet.append("<input type=\"checkbox\" name=\""+key+"\" id=\"checkbox-"+key+"\"><br>");
-                        });
-                    }
-                    else {
-                        message = "Received "+resultJson.annotatorStatus+" error from Annotator, use manual entry to bypass.";
-                        message += " If the problem persists, contact PyxisMap developers.";
-                        fieldSet.append("<h4 style=\"color: red;\">"+message+"</h4>");
-                    }
-                    $("input[type='checkbox']").checkboxradio();
+                    message = "ERROR: Unable to contact server.";
+                    message += " If the problem persists, contact PyxisMap developers.";
+                    fieldSet.append("<h4 style=\"color: red;\">"+message+"</h4>");
                 });
             });
             
