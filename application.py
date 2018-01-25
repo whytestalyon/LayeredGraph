@@ -65,7 +65,7 @@ def terms():
     '''
     This function returns a JSON presentation of the terms that match user typed text
     '''
-    pprint(request.args)
+    # pprint(request.args)
     searchTerm = str(request.args.get('term'))
     hpoTerms = getTermsAndSyns('./HPO_graph_data/hp.obo')
     options = list([])
