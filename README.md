@@ -45,6 +45,15 @@ build a volume container containing the graph data that will be used by the serv
 container first via the respective method listed above and then rerun the application (see below steps on starting the app and stopping it).
 
 ### Running the Application
+
+#### Local deployment for live development
+To run the server such that you can do local development on the files and have the changes rendered immediately in a terminal
+(making sure you are in the root directory of the project):
+```bash
+docker-compose -f local-docker-compose.yml up
+``` 
+
+#### Regular deployment
 To run the server enter the following command into a terminal (making sure you are in the root directory of the project):
 ```bash
 docker-compose up -d
