@@ -244,21 +244,31 @@ def textannotate():
                'ontologies': 'HP',
                'whole_word_only': 'false'}
     url = 'http://data.bioontology.org/annotator?' + urlencode(payload, quote_via=quote_plus)
-    resp = requests.get(url)
-
+    try:
+        resp = requests.get(url)
+    except Exception as e:
+        print("Python Exception: "+str(e))
+        return jsonify({'annotatorStatus': 'UNKNOWN', 'terms': {}})
+        
+    returnCode = resp.status_code
+    
     # get definitions of HPO terms
     hpoTerms = getTermsAndSyns('./HPO_graph_data/hp.obo')
     hpo_terms_defs = {}
-    for annot in resp.json():
-        hpoid = annot['annotatedClass']['@id'].split('/')[-1].replace('_', ':')
-        for hpo, defText in hpoTerms:
-            if hpoid.lower() in hpo.lower():
-                hpo_terms_defs[hpoid] = defText
-                break
+    try:
+        for annot in resp.json():
+            hpoid = annot['annotatedClass']['@id'].split('/')[-1].replace('_', ':')
+            for hpo, defText in hpoTerms:
+                if hpoid.lower() in hpo.lower():
+                    hpo_terms_defs[hpoid] = defText
+                    break
+    except Exception as e:
+        print("Annotator response: "+str(resp.json()))
+        print("Python Exception: "+str(e))
 
     resp.close()
 
-    return jsonify(hpo_terms_defs)
+    return jsonify({'annotatorStatus': returnCode, 'terms': hpo_terms_defs})
 
 def getMultigraphVars():
     '''

@@ -71,14 +71,14 @@
                 $("#table_btn").click(function () {
                     //clear, then add space for the PPI graph, the main table, and an on-click table
                     $("#resdiv").empty();
-                    $("#resdiv").append("<h3>Interaction Graph - Top 25 Genes</h3><br>");
-                    $("#resdiv").append("<input id=\"physicsCB\" type=\"checkbox\" checked=\"checked\">Physics Enabled");
-                    $("#resdiv").append("<div id=\"ppigraph\"></div>");
-                    $("#resdiv").append("<h3>Full Results</h3><table id=\"restable\" class=\"display\"></table>");
-                    $("#resdiv").append("<div id=\"resclickdiv\"></div>");
                     
                     //get user inputs
                     var allTerms = $(".select2").parent().find("select").val();
+                    
+                    if(allTerms.length === 0) {
+                        alert("No genes are selected.");
+                        return;
+                    }
                     
                     //prepare what the output table will look like in terms of columns
                     var columns = [
@@ -97,6 +97,7 @@
                     }
                     
                     console.log(allTerms);
+                    $("#resdiv").append("<h4 style=\"color: blue\">Querying server...</h4>");
                     
                     //hit the PPI deep ranking endpoint
                     $.ajax({
@@ -104,6 +105,13 @@
                             url: '/protdeeprank',
                             data: JSON.stringify(allTerms),
                             success: function(data) {
+                                $("#resdiv").empty();
+                                $("#resdiv").append("<h3>Interaction Graph - Top 25 Genes</h3><br>");
+                                $("#resdiv").append("<input id=\"physicsCB\" type=\"checkbox\" checked=\"checked\">Physics Enabled");
+                                $("#resdiv").append("<div id=\"ppigraph\"></div>");
+                                $("#resdiv").append("<h3>Full Results</h3><table id=\"restable\" class=\"display\"></table>");
+                                $("#resdiv").append("<div id=\"resclickdiv\"></div>");
+                                
                                 //first create a DataTable hosting the primary results that is sorted by rank
                                 var table = $("#restable").DataTable({
                                     data: data.rankings,
@@ -289,6 +297,10 @@
                                         }
                                     });
                                 });
+                            },
+                            error: function (textStatus, errorThrown) {
+                                $("#resdiv").empty();
+                                $("#resdiv").append("<h4 style=\"color: red\">ERROR: "+errorThrown+", if the problem persists, contact PyxisMap developers.</h4>");
                             },
                             contentType: "application/json",
                             dataType: 'json'
