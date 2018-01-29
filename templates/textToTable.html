@@ -212,15 +212,12 @@
                                 var geneText = genes.slice(0, sliceSize).toString().replace(/[\[\]]/g,"").replace(/,/g,";");
                                 if(sliceSize == genes.length) {
                                     rd.append("<h4>All genes</h4>");
-                                    console.log(geneText);
                                 }
                                 else {
                                     rd.append("<h4>Top "+sliceSize+" genes</h4>");
                                 }
                                 rd.append('<button onclick="copyText(\'copy'+sliceSize+'\')">Copy text</button>');
-                                //rd.append("<textarea readonly rows=\"1\" class=\"copyBlock\" id=\"copy"+sliceSize+"\">"+geneText+"</textarea><br><br>");
-                                rd.append("<textarea readonly rows=\"1\" class=\"copyBlock\" id=\"copy"+sliceSize+"\"></textarea><br><br>");
-                                document.getElementById("copy"+sliceSize).innerHTML = geneText;
+                                rd.append("<textarea readonly rows=\"1\" class=\"copyBlock\" id=\"copy"+sliceSize+"\">"+geneText+"</textarea><br><br>");
                             });
                         },
                         error: function (textStatus, errorThrown) {

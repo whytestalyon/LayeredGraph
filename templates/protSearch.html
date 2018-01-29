@@ -55,6 +55,14 @@
         <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
         
         <script>
+            function copyText(labelID) {
+                console.log(labelID);
+                var copied = $('#'+labelID);
+                console.log(copied);
+                copied.select();
+                document.execCommand("Copy");
+            }
+            
             $(document).ready(function() {
                 //this is the gene input box that pings the server for a list of genes matching user input
                 $('.hpo-select').select2({
@@ -65,6 +73,62 @@
                         delay: 300,
                         dataType: 'json'
                     }
+                });
+                
+                $("#genes_btn").click(function () {
+                    //clear, then add space for the PPI graph, the main table, and an on-click table
+                    $("#resdiv").empty();
+                    
+                    //get user inputs
+                    var allTerms = $(".select2").parent().find("select").val();
+                    
+                    if(allTerms.length === 0) {
+                        alert("No genes are selected.");
+                        return;
+                    }
+                    
+                    console.log(allTerms);
+                    
+                    if(allTerms.length === 0) {
+                        alert("No HPO terms are selected.");
+                        return;
+                    }
+                    
+                    $("#resdiv").append("<h4 style=\"color: blue\">Querying server...</h4>");
+                    $.ajax({
+                            type: 'POST',
+                            url: '/protrank',
+                            data: JSON.stringify(allTerms),
+                            success: function(data) {
+                                $("#resdiv").empty();
+                                $("#resdiv").append('Used: ' + JSON.stringify(data.usedTerms).replace("[","{").replace("]","}") + '<br>');
+                                $("#resdiv").append('CSV-used: ' + data.usedTerms.sort() + '<br>');
+                                $("#resdiv").append('Missing: ' + data.missingTerms + '<br><br>');
+    
+                                var genes = [];
+                                data.rankings.forEach(function (t) { genes.push(t.label); });
+                                
+                                var slices = [20, 50, 100, 500, 1000, 2000, 5000, genes.length];
+                                slices.forEach(function (sliceSize) {
+                                    var rd = $("#resdiv");
+                                    var geneText = genes.slice(0, sliceSize).toString().replace(/[\[\]]/g,"").replace(/,/g,";");
+                                    if(sliceSize == genes.length) {
+                                        rd.append("<h4>All genes</h4>");
+                                    }
+                                    else {
+                                        rd.append("<h4>Top "+sliceSize+" genes</h4>");
+                                    }
+                                    rd.append('<button onclick="copyText(\'copy'+sliceSize+'\')">Copy text</button>');
+                                    rd.append("<textarea readonly rows=\"1\" class=\"copyBlock\" id=\"copy"+sliceSize+"\">"+geneText+"</textarea><br><br>");
+                                });
+                            },
+                            error: function (textStatus, errorThrown) {
+                                $("#resdiv").empty();
+                                $("#resdiv").append("<h4 style=\"color: red\">ERROR: "+errorThrown+", if the problem persists, contact PyxisMap developers.</h4>");
+                            },
+                            contentType: "application/json",
+                            dataType: 'json'
+                    });
                 });
                 
                 //the "Table" button on-click should clear out any data there and then re-fill as server info comes in
@@ -323,6 +387,7 @@
                 <h2>Gene entry:</h2>
                 <select name="term[]" class="hpo-select" multiple="multiple" style="width: 50%"></select><br>
                 <br>
+                <button id="genes_btn">Genes</button>
                 <button id="table_btn">Table</button>
                 <div id="outputdiv">
                     <pre id="resdiv"></pre>
