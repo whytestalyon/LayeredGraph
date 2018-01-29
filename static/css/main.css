@@ -47,3 +47,11 @@ nav li a.active {
     color: white;
     background-color: #008cba;
 }
+
+.copyBlock {
+    width: 80%;
+    resize: none;
+    overflow: scroll;
+    white-space: nowrap;
+    vertical-align: middle;
+}
