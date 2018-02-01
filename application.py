@@ -173,6 +173,39 @@ def deeprank():
            'missingTerms': list(missingTerms)}
     return jsonify(ret)
 
+@app.route('/protrank', methods=['POST'])
+def protrank():
+    '''
+    This is intended to be the workhorse function.  POST needs to include a "term" list that should be HPO terms matching values from the layered graph.
+    '''
+    mydata = request.get_json()
+
+    # "constant" global data
+    mg, restartProb, bg = getProtgraphVars()
+    genes = set([str(x) for x in mydata])
+    rankTypes = set(['gene'])
+    
+    startProbs = {}
+    usedTerms = set([])
+    missingTerms = set([])
+    for gene in genes:
+        if gene in mg.nodes['gene']:
+            startProbs[('gene', gene)] = 1.0
+            usedTerms.add(gene)
+        else:
+            missingTerms.add(gene)
+
+    rankedGenes = mg.RWR_rank(startProbs, restartProb, rankTypes, bg)
+    
+    rankings = []
+    for w, t, l in rankedGenes:
+        rankings.append({'weight': w, 'nodeType': t, 'label': l})
+
+    ret = {'rankings': rankings,
+           'usedTerms': list(usedTerms),
+           'missingTerms': list(missingTerms)}
+    return jsonify(ret)
+
 @app.route('/protdeeprank', methods=['POST'])
 def protdeeprank():
     '''

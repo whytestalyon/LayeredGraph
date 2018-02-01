@@ -50,6 +50,14 @@
     <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
     
     <script>
+        function copyText(labelID) {
+            console.log(labelID);
+            var copied = $('#'+labelID);
+            console.log(copied);
+            copied.select();
+            document.execCommand("Copy");
+        }
+        
         $(document).ready(function () {
             $("#get_terms").click(function () {
                 var fieldSet = $("#hpofs-output");
@@ -197,22 +205,20 @@
 
                             var genes = [];
                             data.rankings.forEach(function (t) { genes.push(t.label); });
-                            $("#resdiv").append("<h4>Top 20 genes</h4>");
-                            $("#resdiv").append(genes.slice(0, 20).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                            $("#resdiv").append("<h4>Top 50 genes</h4>");
-                            $("#resdiv").append(genes.slice(0, 50).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                            $("#resdiv").append("<h4>Top 100 genes</h4>");
-                            $("#resdiv").append(genes.slice(0, 100).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                            $("#resdiv").append("<h4>Top 500 genes</h4>");
-                            $("#resdiv").append(genes.slice(0, 500).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                            $("#resdiv").append("<h4>Top 1000 genes</h4>");
-                            $("#resdiv").append(genes.slice(0, 1000).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                            $("#resdiv").append("<h4>Top 2000 genes</h4>");
-                            $("#resdiv").append(genes.slice(0, 2000).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                            $("#resdiv").append("<h4>Top 5000 genes</h4>");
-                            $("#resdiv").append(genes.slice(0, 5000).toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
-                            $("#resdiv").append("<h4>All genes</h4>");
-                            $("#resdiv").append(genes.toString().replace(/[\[\]]/g,"").replace(/,/g,";") + '<br><br>');
+                            
+                            var slices = [20, 50, 100, 500, 1000, 2000, 5000, genes.length];
+                            slices.forEach(function (sliceSize) {
+                                var rd = $("#resdiv");
+                                var geneText = genes.slice(0, sliceSize).toString().replace(/[\[\]]/g,"").replace(/,/g,";");
+                                if(sliceSize == genes.length) {
+                                    rd.append("<h4>All genes</h4>");
+                                }
+                                else {
+                                    rd.append("<h4>Top "+sliceSize+" genes</h4>");
+                                }
+                                rd.append('<button onclick="copyText(\'copy'+sliceSize+'\')">Copy text</button>');
+                                rd.append("<textarea readonly rows=\"1\" class=\"copyBlock\" id=\"copy"+sliceSize+"\">"+geneText+"</textarea><br><br>");
+                            });
                         },
                         error: function (textStatus, errorThrown) {
                             $("#resdiv").empty();
