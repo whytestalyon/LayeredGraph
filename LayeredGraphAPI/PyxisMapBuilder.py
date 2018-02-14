@@ -59,7 +59,8 @@ def createPyxisMapGraph(hpoPhenoToGenoFN, graphStructureFN):
     print('Gathering gene nodes from Pubtator...')
     pubGeneSet = set([])
     for eid, hpo in p2gWeights:
-        pubGeneSet.add(ed[eid])
+        if (eid in ed):
+            pubGeneSet.add(ed[eid])
     
     #combine the HPO gene set and the pubtator gene set then add those
     print('Adding gene nodes to the graph...')
@@ -115,11 +116,12 @@ def createPyxisMapGraph(hpoPhenoToGenoFN, graphStructureFN):
                 hpo = alias
         
         #if this has an HPO to gene relationship, add 1.0 to the weight (since its a replacement for the previous weight)
-        g = ed[eid]
-        if (g in p2g.get(hpo, [])):
-            mg.addEdge('HPO', hpo, 'gene', g, 1.0+(p2gWeights[(eid, hpo)] / maxValue), False)
-        else:
-            mg.addEdge('HPO', hpo, 'gene', g, p2gWeights[(eid, hpo)] / maxValue, False)
+        if (eid in ed):
+            g = ed[eid]
+            if (g in p2g.get(hpo, [])):
+                mg.addEdge('HPO', hpo, 'gene', g, 1.0+(p2gWeights[(eid, hpo)] / maxValue), False)
+            else:
+                mg.addEdge('HPO', hpo, 'gene', g, p2gWeights[(eid, hpo)] / maxValue, False)
         
     #now finish out everything
     print('Setting graph jump equal...')
