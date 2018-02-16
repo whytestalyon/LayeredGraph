@@ -6,15 +6,18 @@
 
 #pull all files
 mkdir HPO_graph_data
-cd HPO_graph_data
+mkdir HPO_data_files
+cd HPO_data_files
 echo "Getting latest HPO graph structure..."
 curl -L http://purl.obolibrary.org/obo/hp.obo -o hp.obo
 echo "Getting latest HPO to gene relationships..."
 curl -L http://compbio.charite.de/jenkins/job/hpo.annotations.monthly/lastStableBuild/artifact/annotation/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt -o ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt
+echo "Retrieving latest HGNC complete set..."
+curl -L ftp://ftp.ebi.ac.uk/pub/databases/genenames/new/tsv/hgnc_complete_set.txt -o hgnc_complete_set.txt
 cd ..
 
 #we need to generate the HPO graph data
-
+python ../../LayeredGraphAPI/PyxisMapBuilder.py
 
 #we need to generate the PPI graph data
 

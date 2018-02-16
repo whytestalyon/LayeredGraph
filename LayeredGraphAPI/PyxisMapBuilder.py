@@ -241,7 +241,7 @@ def getEntrezDict():
     '''
     ed = {}
     aliases = {}
-    fp = open('/Users/matt/data/HPO_dl/hgnc.txt', 'r')
+    fp = open('./HPO_data_files/hgnc_complete_set.txt', 'r')
     fp.readline()
     for l in fp:
         pieces = l.rstrip().split('\t')
@@ -390,13 +390,13 @@ if __name__ == '__main__':
     #TODO: maybe write code/scripts to fetch these? I know the local HPO datasets are fairly old now
     
     #static files we will be using
-    hpoPhenoToGenoFN = '/Users/matt/data/HPO_dl/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt'
-    graphStructureFN = '/Users/matt/data/HPO_dl/hp.obo'
+    hpoPhenoToGenoFN = './HPO_data_files/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt'
+    graphStructureFN = './HPO_data_files/hp.obo'
     
     #output files
-    pickleGraphFN = '/Users/matt/data/HPO_dl/multigraph.pickle'
-    pickleHPOWeightFN = '/Users/matt/data/HPO_dl/multiHpoWeight_biogrid_pushup.pickle'
-    pickleP2gFN = '/Users/matt/data/HPO_dl/multiP2G_biogrid_pushup.pickle'
+    pickleGraphFN = './HPO_graph_data/multigraph.pickle'
+    pickleHPOWeightFN = './HPO_graph_data/multiHpoWeight_biogrid_pushup.pickle'
+    pickleP2gFN = './HPO_graph_data/multiP2G_biogrid_pushup.pickle'
     
     #create the graph
     mg = createPyxisMapGraph(hpoPhenoToGenoFN, graphStructureFN)
