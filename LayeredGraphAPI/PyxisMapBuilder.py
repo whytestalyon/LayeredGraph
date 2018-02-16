@@ -147,7 +147,7 @@ def loadPhenoToGeno(fn):
     for l in fp:
         pieces = l.strip('\n').split('\t')
         hpo = pieces[0]
-        geneName = pieces[3]
+        geneName = pieces[3].upper()
         
         if hpo not in ret:
             ret[hpo] = set([geneName])
@@ -242,18 +242,25 @@ def getEntrezDict():
     ed = {}
     aliases = {}
     fp = open('./HPO_data_files/hgnc_complete_set.txt', 'r')
-    fp.readline()
+    
+    headers = fp.readline().rstrip()
+    hDict = {l : i for i, l in enumerate(headers.split('\t'))}
+    geneIndex = hDict['symbol']
+    alIndex = hDict['alias_symbol']
+    entrezIndex = hDict['entrez_id']
+    
     for l in fp:
         pieces = l.rstrip().split('\t')
-        geneName = pieces[1].strip('"')
+        geneName = pieces[geneIndex].strip('"').upper()
         if len(pieces) < 19:
             continue
-        eid = pieces[18]
+        eid = pieces[entrezIndex]
         ed[eid] = geneName
-        al = pieces[8].strip('"')
+        al = pieces[alIndex].strip('"')
         if al != '':
             aliases[eid] = al.split('|')
     fp.close()
+    
     return ed, aliases
 
 def getP2GWeights():
@@ -262,11 +269,11 @@ def getP2GWeights():
     @return - dictionary where key is (entrez ID, hpo term) and value is the number of pmids attached to that pair
     '''
     p2gSets = {}
-    fp = open('/Users/matt/data/HPO_dl/gene2phenotype.json', 'r')
+    fp = open('./HPO_data_files/gene2phenotype.json', 'r')
     
     for l in fp:
         j = json.loads(l)
-        gene = j['geneId']
+        gene = j['geneId'].upper()
         hpoTerm = j['hpoId']
         pmids = j['pmids']
         p2gSets[(gene, hpoTerm)] = len(pmids)
