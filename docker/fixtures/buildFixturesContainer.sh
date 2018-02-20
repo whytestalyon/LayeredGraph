@@ -1,9 +1,4 @@
 #!/usr/bin/env bash
-#echo "Preparing to download graph data, please enter Morgan username:"
-#read USERNAME
-#echo "Downloading graph data from Morgan, scp will prompt for password..."
-#scp -rp ${USERNAME}@login.morgan.haib.org:/gpfs/gpfs1/home/jholt/HPO_graph_data .
-
 #pull all files
 mkdir HPO_graph_data
 mkdir HPO_data_files
@@ -50,5 +45,7 @@ else
 fi
 
 echo "Cleaning up..."
+#uncomment for local dev
+cp -r ./HPO_graph_data ../../HPO_graph_data
 rm -rf HPO_data_files
 rm -rf HPO_graph_data

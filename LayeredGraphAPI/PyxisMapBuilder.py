@@ -394,8 +394,6 @@ def calculateHpoScores(nodes, edges):
     return hpoScores
 
 if __name__ == '__main__':
-    #TODO: maybe write code/scripts to fetch these? I know the local HPO datasets are fairly old now
-    
     #static files we will be using
     hpoPhenoToGenoFN = './HPO_data_files/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt'
     graphStructureFN = './HPO_data_files/hp.obo'
