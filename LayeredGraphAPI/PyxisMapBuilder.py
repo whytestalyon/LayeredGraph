@@ -7,6 +7,7 @@ This file contains the methods to construct the LayeredGraph used by PyxisMap.  
 
 import json
 import numpy as np
+import os
 import pickle
 
 import LayeredGraph
@@ -268,6 +269,9 @@ def getP2GWeights():
     This will calculate the p2g weights based on pubtator stuff
     @return - dictionary where key is (entrez ID, hpo term) and value is the number of pmids attached to that pair
     '''
+    if not os.path.exists('./HPO_data_files/gene2phenotype.json'):
+        return {}
+    
     p2gSets = {}
     fp = open('./HPO_data_files/gene2phenotype.json', 'r')
     

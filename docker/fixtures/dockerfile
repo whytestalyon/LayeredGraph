@@ -1,10 +1,20 @@
-FROM centos:7
+FROM python:3 as builder
 MAINTAINER bwilk@hudsonalpha.org
 
-RUN mkdir /LayeredGraph
-RUN mkdir /LayeredGraph/HPO_graph_data
+RUN pip3 install numpy scipy
 
-COPY HPO_graph_data/* /LayeredGraph/HPO_graph_data/
+RUN mkdir /LayeredGraph
+
+COPY LayeredGraphAPI /LayeredGraphAPI/
+COPY buildGraph.sh /buildGraph.sh
+
+#RUN /buildDockerFixtures.sh
+RUN /buildGraph.sh
+RUN rm -rf /HPO_data_files
+
+#look into multi-stage builds
+FROM alpine
+COPY --from=builder /HPO_graph_data /LayeredGraph/HPO_graph_data
 
 VOLUME /LayeredGraph/HPO_graph_data
 
