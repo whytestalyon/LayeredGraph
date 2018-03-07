@@ -1,11 +1,12 @@
 FROM python:3 as builder
 MAINTAINER bwilk@hudsonalpha.org
 
-RUN pip3 install numpy scipy
+RUN pip3 install numpy scipy pronto networkx
 
 RUN mkdir /LayeredGraph
 
 COPY LayeredGraphAPI /LayeredGraphAPI/
+COPY PubTator /PubTator/
 COPY buildGraph.sh /buildGraph.sh
 
 #RUN /buildDockerFixtures.sh
@@ -18,4 +19,4 @@ COPY --from=builder /HPO_graph_data /LayeredGraph/HPO_graph_data
 
 VOLUME /LayeredGraph/HPO_graph_data
 
-ENTRYPOINT ["echo", "Data only container for mariaDB"]
+ENTRYPOINT ["echo", "Data only container for PyxisMap"]
