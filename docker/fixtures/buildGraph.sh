@@ -39,7 +39,7 @@ cp ./HPO_data_files/hp.obo ./HPO_graph_data/hp.obo
 # run the pubtator parser and generate the gene to phenotype correlations from it
 echo
 echo "Parsing PubTator data:"
-python3 -u ./PubTator/PubTatorParser.py 2>1
+python3 -u ./PubTator/PubTatorParser.py
 echo
 
 #we need to generate the HPO graph data

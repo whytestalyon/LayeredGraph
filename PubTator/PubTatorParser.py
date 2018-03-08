@@ -209,6 +209,7 @@ if __name__ == '__main__':
 
     print('Building gene to phenotype mention mapping...')
     gene2phenotype = dict({})
+    cntr = 0
     with gzip.open(bioconcept_filename, 'rt') as f_in:
         for line in f_in:
             cols = line.split("\t")
@@ -217,9 +218,13 @@ if __name__ == '__main__':
                     for phen_id in mesh2disease_phenotype_map[cols[3]].nodes:
                         if str(phen_id).startswith('HP'):
                             put2dict_of_sets(gene2phenotype, (gene, phen_id), cols[0])
+                            cntr += 1
+                            if cntr % 1000000 == 0:
+                                print("")
+                                print("Built Phenotypes 2 gene relations: " + str(cntr), sep=' ', end='', flush=True)
             else:
                 continue
-
+    print('')
     print('Number of unique gene to phenotype relationships: ' + str(len(gene2phenotype)))
 
     print('Writing results to file...')
