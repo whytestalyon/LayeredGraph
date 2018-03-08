@@ -228,7 +228,7 @@ if __name__ == '__main__':
     print('Number of unique gene to phenotype relationships: ' + str(len(gene2phenotype)))
 
     print('Writing results to file...')
-    outfile = open("./HPO_graph_data/gene2phenotype.json", 'w')
+    outfile = open("./HPO_data_files/gene2phenotype.json", 'w+')
     for g2p, pmids in gene2phenotype.items():
         outfile.write(json.dumps({'geneId': g2p[0], 'hpoId': g2p[1], 'pmids': list(pmids)}) + '\n')
 
