@@ -26,7 +26,7 @@ echo "Downloading PubTator bioconcepts..."
 curl --retry 3 -L ftp://ftp.ncbi.nlm.nih.gov/pub/lu/PubTator/bioconcepts2pubtator.gz -o bioconcepts2pubtator.gz
 
 #ppi data files
-echo "Downlonading PPI graph files..."
+echo "Downloading PPI graph files..."
 curl --retry 3 -g -L "http://www.uniprot.org/uniprot/?sort=&desc=&compress=yes&query=&fil=organism:%22Homo%20sapiens%20(Human)%20[9606]%22%20AND%20reviewed:yes&force=no&preview=true&format=tab" -o uniprot-all.tab.gz
 gunzip uniprot-all.tab.gz
 curl --retry 3 -L "http://cpdb.molgen.mpg.de/download/ConsensusPathDB_human_PPI.gz" -o ConsensusPathDB_human_PPI.gz

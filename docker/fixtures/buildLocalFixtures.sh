@@ -2,6 +2,7 @@
 #pull all files
 
 cp -r ../../LayeredGraphAPI .
+cp -r ../../PubTator .
 
 ./buildGraph.sh
 
@@ -12,3 +13,4 @@ fi
 mv ./HPO_graph_data ../../HPO_graph_data
 rm -rf HPO_data_files
 rm -rf LayeredGraphAPI
+rm -rf PubTator
