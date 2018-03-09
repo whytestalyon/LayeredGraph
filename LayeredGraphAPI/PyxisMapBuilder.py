@@ -95,20 +95,12 @@ def createPyxisMapGraph(hpoPhenoToGenoFN, graphStructureFN):
     #identify the Pubtator pairing with the largest weight
     maxValue = 0.0
     for (eid, hpo) in p2gWeights:
-        if (hpo not in nodes):
-            alias = altIDMap.get(hpo, None)
-            if alias == None:
-                print('Warning: '+hpo+' not found in HPO database.')
-                continue
-            else:
-                print('Swapping '+hpo+' for alt_id '+alias)
-                hpo = alias
-        
         if p2gWeights[(eid, hpo)] > maxValue:
             maxValue = p2gWeights[(eid, hpo)]
     
     #update any edges that have Pubtator annotations with a weighted fraction from [0.0, 1.0]
     for (eid, hpo) in p2gWeights:
+        w = p2gWeights[(eid, hpo)]
         if (hpo not in nodes):
             alias = altIDMap.get(hpo, None)
             if alias == None:
@@ -122,9 +114,9 @@ def createPyxisMapGraph(hpoPhenoToGenoFN, graphStructureFN):
         if (eid in ed):
             g = ed[eid]
             if (g in p2g.get(hpo, [])):
-                mg.addEdge('HPO', hpo, 'gene', g, 1.0+(p2gWeights[(eid, hpo)] / maxValue), False)
+                mg.addEdge('HPO', hpo, 'gene', g, 1.0+(w / maxValue), False)
             else:
-                mg.addEdge('HPO', hpo, 'gene', g, p2gWeights[(eid, hpo)] / maxValue, False)
+                mg.addEdge('HPO', hpo, 'gene', g, w / maxValue, False)
         
     #now finish out everything
     print('Setting graph jump equal...')
