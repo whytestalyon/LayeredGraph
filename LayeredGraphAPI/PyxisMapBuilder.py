@@ -107,7 +107,7 @@ def createPyxisMapGraph(hpoPhenoToGenoFN, graphStructureFN):
                 print('Warning: '+hpo+' not found in HPO database.')
                 continue
             else:
-                print('Swapping '+hpo+' for alt_id '+alias)
+                #print('Swapping '+hpo+' for alt_id '+alias)
                 hpo = alias
         
         #if this has an HPO to gene relationship, add 1.0 to the weight (since its a replacement for the previous weight)
