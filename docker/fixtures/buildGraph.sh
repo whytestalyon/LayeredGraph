@@ -22,8 +22,10 @@ echo "Downloading the Disease Ontology..."
 curl --retry 3 -L http://purl.obolibrary.org/obo/doid.obo -o doid.obo
 echo "Downloading and unpacking OrphaNet diseseas ontology..."
 curl --retry 3 -L  http://www.orphadata.org/data/ORDO/ordo_orphanet.owl.zip -o ordo_orphanet.owl.zip
-echo "Downloading PubTator bioconcepts..."
-curl --retry 3 -L ftp://ftp.ncbi.nlm.nih.gov/pub/lu/PubTator/bioconcepts2pubtator.gz -o bioconcepts2pubtator.gz
+echo "Downloading PubTator gene file..."
+curl --retry 3 -L ftp://ftp.ncbi.nlm.nih.gov/pub/lu/PubTator/gene2pubtator.gz -o gene2pubtator.gz
+echo "Downloading PubTator disease file..."
+curl --retry 3 -L ftp://ftp.ncbi.nlm.nih.gov/pub/lu/PubTator/disease2pubtator.gz -o disease2pubtator.gz
 
 #ppi data files
 echo "Downloading PPI graph files..."
