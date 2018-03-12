@@ -75,7 +75,7 @@ def loadProteinDict():
     This function will read in the file that pairs protein labels (from Uniprot?) with gene names
     @return - a dictionary where key is the protein label and value is the gene name
     '''
-    fn = '/Users/matt/data/HPO_dl/uniprot-all.tab'
+    fn = './HPO_data_files/uniprot-all.tab'
     fp = open(fn, 'r')
     fp.readline()
     
@@ -102,7 +102,7 @@ def loadPPI():
     This function will read in the file that contains protein-protein interactions and return the information we care about
     @return - a list of tuples where each tuple contains (protein1, protein2, confidence, number of participants) such that protein1 lexicographically precedes protein2
     '''
-    fn = '/Users/matt/data/HPO_dl/ConsensusPathDB_human_PPI'
+    fn = './HPO_data_files/ConsensusPathDB_human_PPI'
     fp = open(fn, 'r')
     fp.readline()
     fp.readline()
@@ -131,7 +131,7 @@ if __name__ == '__main__':
     #static files we will be using
     
     #output files
-    pickleGraphFN = '/Users/matt/data/HPO_dl/protgraph.pickle'
+    pickleGraphFN = './HPO_graph_data/protgraph.pickle'
     
     #create the graph
     mg = createProtGraph()

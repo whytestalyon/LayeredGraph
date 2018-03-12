@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-echo "Preparing to download graph data, please enter Morgan username:"
-read USERNAME
-echo "Downloading graph data from Morgan, scp will prompt for password..."
-scp -rp ${USERNAME}@login.morgan.haib.org:/gpfs/gpfs1/home/jholt/HPO_graph_data .
+
+cp -r ../../LayeredGraphAPI .
+cp -r ../../PubTator PubTator
 
 docker build -t docker-registry.haib.org/sdi/layered-graph-fixtures .
 if [ $? -ne 0 ]; then
@@ -11,6 +10,5 @@ else
     echo "Fixtures image built!"
 fi
 
-echo "Cleaning up..."
-rm -rf HPO_graph_data
-
+rm -rf ./LayeredGraphAPI
+rm -rf ./PubTator

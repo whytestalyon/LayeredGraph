@@ -7,7 +7,10 @@ This file contains the methods to construct the LayeredGraph used by PyxisMap.  
 
 import json
 import numpy as np
+import os
 import pickle
+
+import pronto
 
 import LayeredGraph
 
@@ -18,18 +21,18 @@ def createPyxisMapGraph(hpoPhenoToGenoFN, graphStructureFN):
     @param graphStructureFN - the OBO file from HPO; typically ./HPO_dl/hp.obo
     @return - an instance of LayeredGraph containing the constructed graph
     '''
-    #first, load in the phenotype to gene mappings
-    print('Loading HPO to gene information...')
-    p2g = loadPhenoToGeno(hpoPhenoToGenoFN)
-    print(len(p2g), 'p2g associations')
-    
-    #second, build a graph
+    #first, build a graph
     nodes, edges, altIDMap = loadGraphStructure(graphStructureFN)
+    
+    #second, load in the phenotype to gene mappings
+    print('Loading HPO to gene information...')
+    p2g = loadPhenoToGeno(hpoPhenoToGenoFN, altIDMap)
+    print(len(p2g), 'p2g associations')
     
     #make sure anything in p2g is stored as the main ID
     for k in p2g:
         assert(k not in altIDMap)
-    
+        
     #make sure all our edges only use main IDs also
     for source in edges:
         assert(source not in altIDMap)
@@ -59,7 +62,8 @@ def createPyxisMapGraph(hpoPhenoToGenoFN, graphStructureFN):
     print('Gathering gene nodes from Pubtator...')
     pubGeneSet = set([])
     for eid, hpo in p2gWeights:
-        pubGeneSet.add(ed[eid])
+        if (eid in ed):
+            pubGeneSet.add(ed[eid])
     
     #combine the HPO gene set and the pubtator gene set then add those
     print('Adding gene nodes to the graph...')
@@ -91,35 +95,28 @@ def createPyxisMapGraph(hpoPhenoToGenoFN, graphStructureFN):
     #identify the Pubtator pairing with the largest weight
     maxValue = 0.0
     for (eid, hpo) in p2gWeights:
-        if (hpo not in nodes):
-            alias = aliases.get(hpo, None)
-            if alias == None:
-                print('Warning: '+hpo+' not found in HPO database.')
-                continue
-            else:
-                print('Swapping '+hpo+' for alias '+alias)
-                hpo = alias
-        
         if p2gWeights[(eid, hpo)] > maxValue:
             maxValue = p2gWeights[(eid, hpo)]
     
     #update any edges that have Pubtator annotations with a weighted fraction from [0.0, 1.0]
     for (eid, hpo) in p2gWeights:
+        w = p2gWeights[(eid, hpo)]
         if (hpo not in nodes):
-            alias = aliases.get(hpo, None)
+            alias = altIDMap.get(hpo, None)
             if alias == None:
                 print('Warning: '+hpo+' not found in HPO database.')
                 continue
             else:
-                print('Swapping '+hpo+' for alias '+alias)
+                #print('Swapping '+hpo+' for alt_id '+alias)
                 hpo = alias
         
         #if this has an HPO to gene relationship, add 1.0 to the weight (since its a replacement for the previous weight)
-        g = ed[eid]
-        if (g in p2g.get(hpo, [])):
-            mg.addEdge('HPO', hpo, 'gene', g, 1.0+(p2gWeights[(eid, hpo)] / maxValue), False)
-        else:
-            mg.addEdge('HPO', hpo, 'gene', g, p2gWeights[(eid, hpo)] / maxValue, False)
+        if (eid in ed):
+            g = ed[eid]
+            if (g in p2g.get(hpo, [])):
+                mg.addEdge('HPO', hpo, 'gene', g, 1.0+(w / maxValue), False)
+            else:
+                mg.addEdge('HPO', hpo, 'gene', g, w / maxValue, False)
         
     #now finish out everything
     print('Setting graph jump equal...')
@@ -130,10 +127,11 @@ def createPyxisMapGraph(hpoPhenoToGenoFN, graphStructureFN):
     
     return mg
 
-def loadPhenoToGeno(fn):
+def loadPhenoToGeno(fn, altIDMap):
     '''
     This function parses the HPO phenotype file and returns HPO->gene information
     @param fn - the filename for the HPO file
+    @param altIDMap - a dictionary point alternate IDs to the primary ID
     @return - a dictionary where the key is an HPO term and the value is a set of gene names
     '''
     #return a dictionary of p2g
@@ -144,8 +142,14 @@ def loadPhenoToGeno(fn):
     fp.readline()
     for l in fp:
         pieces = l.strip('\n').split('\t')
+        
+        #get the HPO term and replace with primary ID if necessary
         hpo = pieces[0]
-        geneName = pieces[3]
+        if (hpo in altIDMap):
+            hpo = altIDMap[hpo]
+        
+        #get the gene name
+        geneName = pieces[3].upper()
         
         if hpo not in ret:
             ret[hpo] = set([geneName])
@@ -164,40 +168,30 @@ def loadGraphStructure(fn):
         edges - a dictionary where key is a parent HPO term and value is a set of child HPO terms
         altIdToMain - a dictionary where key is an old HPO term and value is the current HPO term (for cases where terms were consolidated)
     '''
-    fp = open(fn, 'r')
+    ont = pronto.Ontology(fn)
     
     nodes = set([])
     edges = {}
     altIdToMain = {}
     
-    #TODO: unhandled: alternate ID's
-    inTerm = False
-    for l in fp:
-        if inTerm:
-            if l == '\n':
-                nodeID = None
-                inTerm = False
-            elif l[0:4] == 'id: ':
-                nodeID = l[4:].strip('\n')
-                nodes.add(nodeID)
-            elif l[0:6] == 'is_a: ':
-                assert(nodeID != None)
-                parentID = l[6:16]
-                if parentID in edges:
-                    edges[parentID].add(nodeID)
-                else:
-                    edges[parentID] = set([nodeID])
-            elif l[0:8] == 'alt_id: ':
-                assert(nodeID != None)
-                altID = l[8:18]
-                altIdToMain[altID] = nodeID
-            else:
-                pass
+    for term in ont:
+        if ('true' not in term.other.get('is_obsolete', [])):
+            if term.id == 'HP:0002109':
+                print(term)
+                print(term.other)
             
-        elif l[0:6] == '[Term]':
-            inTerm = True
-    
-    fp.close()
+            #term isn't obsolete, so add it
+            nodes.add(term.id)
+            
+            #add parent edges
+            for p in term.parents:
+                if p.id in edges:
+                    edges[p.id].add(term.id)
+                else:
+                    edges[p.id] = set([term.id])
+            
+            for a in term.other.get('alt_id', []):
+                altIdToMain[a] = term.id
     
     return nodes, edges, altIdToMain
 
@@ -239,19 +233,26 @@ def getEntrezDict():
     '''
     ed = {}
     aliases = {}
-    fp = open('/Users/matt/data/HPO_dl/hgnc.txt', 'r')
-    fp.readline()
+    fp = open('./HPO_data_files/hgnc_complete_set.txt', 'r')
+    
+    headers = fp.readline().rstrip()
+    hDict = {l : i for i, l in enumerate(headers.split('\t'))}
+    geneIndex = hDict['symbol']
+    alIndex = hDict['alias_symbol']
+    entrezIndex = hDict['entrez_id']
+    
     for l in fp:
         pieces = l.rstrip().split('\t')
-        geneName = pieces[1].strip('"')
+        geneName = pieces[geneIndex].strip('"').upper()
         if len(pieces) < 19:
             continue
-        eid = pieces[18]
+        eid = pieces[entrezIndex]
         ed[eid] = geneName
-        al = pieces[8].strip('"')
+        al = pieces[alIndex].strip('"')
         if al != '':
             aliases[eid] = al.split('|')
     fp.close()
+    
     return ed, aliases
 
 def getP2GWeights():
@@ -259,12 +260,15 @@ def getP2GWeights():
     This will calculate the p2g weights based on pubtator stuff
     @return - dictionary where key is (entrez ID, hpo term) and value is the number of pmids attached to that pair
     '''
+    if not os.path.exists('./HPO_data_files/gene2phenotype.json'):
+        return {}
+    
     p2gSets = {}
-    fp = open('/Users/matt/data/HPO_dl/gene2phenotype.json', 'r')
+    fp = open('./HPO_data_files/gene2phenotype.json', 'r')
     
     for l in fp:
         j = json.loads(l)
-        gene = j['geneId']
+        gene = j['geneId'].upper()
         hpoTerm = j['hpoId']
         pmids = j['pmids']
         p2gSets[(gene, hpoTerm)] = len(pmids)
@@ -279,13 +283,13 @@ def createHPOWeights(hpoPhenoToGenoFN, graphStructureFN):
     @param graphStructureFN - the OBO file from HPO; typically ./HPO_dl/hp.obo
     @return - a dictionary where key is an HPO term and value is the weight for that term based on the calculation
     '''
-    #first, load in the phenotype to gene mappings
-    print('Loading HPO to gene information...')
-    p2g = loadPhenoToGeno(hpoPhenoToGenoFN)
-    print(len(p2g), 'p2g associations')
-    
-    #second, build a graph
+    #first, build a graph
     nodes, edges, altIDMap = loadGraphStructure(graphStructureFN)
+    
+    #second, load in the phenotype to gene mappings
+    print('Loading HPO to gene information...')
+    p2g = loadPhenoToGeno(hpoPhenoToGenoFN, altIDMap)
+    print(len(p2g), 'p2g associations')
     
     #make sure anything in p2g is stored as the main ID
     for k in p2g:
@@ -385,16 +389,14 @@ def calculateHpoScores(nodes, edges):
     return hpoScores
 
 if __name__ == '__main__':
-    #TODO: maybe write code/scripts to fetch these? I know the local HPO datasets are fairly old now
-    
     #static files we will be using
-    hpoPhenoToGenoFN = '/Users/matt/data/HPO_dl/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt'
-    graphStructureFN = '/Users/matt/data/HPO_dl/hp.obo'
+    hpoPhenoToGenoFN = './HPO_data_files/ALL_SOURCES_ALL_FREQUENCIES_phenotype_to_genes.txt'
+    graphStructureFN = './HPO_data_files/hp.obo'
     
     #output files
-    pickleGraphFN = '/Users/matt/data/HPO_dl/multigraph.pickle'
-    pickleHPOWeightFN = '/Users/matt/data/HPO_dl/multiHpoWeight_biogrid_pushup.pickle'
-    pickleP2gFN = '/Users/matt/data/HPO_dl/multiP2G_biogrid_pushup.pickle'
+    pickleGraphFN = './HPO_graph_data/multigraph.pickle'
+    pickleHPOWeightFN = './HPO_graph_data/multiHpoWeight_biogrid_pushup.pickle'
+    pickleP2gFN = './HPO_graph_data/multiP2G_biogrid_pushup.pickle'
     
     #create the graph
     mg = createPyxisMapGraph(hpoPhenoToGenoFN, graphStructureFN)
