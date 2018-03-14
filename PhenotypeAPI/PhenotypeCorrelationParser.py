@@ -1,19 +1,16 @@
 import json
 
 
-def get_index():
-    # since this file is so huge loading it into memory is not an option, so we are gonna get clever and index the file!
-    gene2phenotype_file = open("./HPO_graph_data/gene2phenotype.json", "r")
+def build_block_index(filepath):
+    gene2phenotype_file = open(filepath, "r")
 
     gene_index = {}
     nextLineByte = gene2phenotype_file.tell()
     line = gene2phenotype_file.readline()
     while line:
         gene2phenotype_json = json.loads(line)
-        if gene2phenotype_json["geneId"] in gene_index:
-            gene_index[gene2phenotype_json["geneId"]].append(nextLineByte)
-        else:
-            gene_index[gene2phenotype_json["geneId"]] = [nextLineByte]
+        if gene2phenotype_json["geneId"] not in gene_index:
+            gene_index[gene2phenotype_json["geneId"]] = nextLineByte
 
         nextLineByte = gene2phenotype_file.tell()
         line = gene2phenotype_file.readline()
@@ -23,17 +20,31 @@ def get_index():
     return gene_index
 
 
-def read_json_from_index_list(indexes):
+def read_pubmed_info_from_index(filepath, block_index, accepted_phenotypes):
     phenodict = {}
-    with open("./HPO_graph_data/gene2phenotype.json", "r") as f:
-        for index in indexes:
-            f.seek(index)
+    with open(filepath, "r") as f:
+        f.seek(block_index)
+        line = f.readline()
+        gene2phenotype_json = json.loads(line)
+        gene_of_interest = gene2phenotype_json['geneId']
+
+        f.seek(block_index)
+        while line:
             line = f.readline()
             gene2phenotype_json = json.loads(line)
-            phenodict[gene2phenotype_json["hpoId"]] = gene2phenotype_json["pmids"]
+            gene = gene2phenotype_json['geneId']
+            phenotype = gene2phenotype_json['hpoId']
+            if gene == gene_of_interest:
+                if phenotype in accepted_phenotypes:
+                    phenodict[gene2phenotype_json["hpoId"]] = gene2phenotype_json["pmids"]
+            else:
+                break
 
     return phenodict
 
 
 if __name__ == "__main__":
-    print(get_index("/Users/bwilk/Documents/PyxisMap/l2g/data/gene2phenotype.json")["9693"])
+    blockindex = build_block_index("/Users/bwilk/workspace/LayeredGraph/HPO_graph_data/gene2phenotype.json")["79912"]
+    print('block: ' + str(blockindex))
+    print(str(read_pubmed_info_from_index("/Users/bwilk/workspace/LayeredGraph/HPO_graph_data/gene2phenotype.json",
+                                          blockindex, ["HP:0003198", "HP:0001324"])))

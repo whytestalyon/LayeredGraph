@@ -196,49 +196,48 @@ if __name__ == '__main__':
     disease_filename = './HPO_data_files/disease2pubtator.gz'
     gene2pubmed = {}
     pubmed2disease = {}
-    
+
     print('Loading gene-pubmed...')
     with gzip.open(gene_filename, 'rt') as f_in:
         for line in f_in:
             cols = line.rstrip().split('\t')
-            
+
             pmid = cols[0]
             pubmed2disease[pmid] = set([])
-            
+
             genes = cols[1]
             for gene in re.split(',|;', genes):
                 if (gene in accepted_entrez_ids):
                     put2dict_of_sets(gene2pubmed, gene, pmid)
-    
+
     print('Loading pubmed-disease...')
     with gzip.open(disease_filename, 'rt') as f_in:
         for line in f_in:
             cols = line.rstrip().split('\t')
-            
+
             pmid = cols[0]
             if (pmid in pubmed2disease):
                 disease = cols[1]
                 if (disease in accepted_mesh_terms):
                     put2dict_of_sets(pubmed2disease, pmid, disease)
-            
-    
+
     print('Loaded', len(gene2pubmed), 'gene-pubmed keys.')
     print('Loaded', len(pubmed2disease), 'pubmed-disease keys.')
-    
+
     print('Writing results to file...')
     outfile = open("./HPO_data_files/gene2phenotype.json", 'w+')
-    
-    for gene in gene2pubmed:
+
+    for gene in sorted(gene2pubmed.keys()):
         hpo2pubmed = {}
         for pubmed in gene2pubmed[gene]:
             for disease in pubmed2disease.get(pubmed, []):
                 for phen_id in mesh2disease_phenotype_map[disease].nodes:
                     if str(phen_id).startswith('HP'):
                         put2dict_of_sets(hpo2pubmed, phen_id, pubmed)
-        
+
         for hpo in sorted(hpo2pubmed.keys()):
-            outfile.write(json.dumps({'geneId':gene, 'hpoId': hpo, 'pmids': sorted(hpo2pubmed[hpo])})+'\n')
-    
+            outfile.write(json.dumps({'geneId': gene, 'hpoId': hpo, 'pmids': sorted(hpo2pubmed[hpo])}) + '\n')
+
     outfile.close()
     print('All PubTator information consumed in ' + str((time.time() - start)) + ' seconds')
     #
