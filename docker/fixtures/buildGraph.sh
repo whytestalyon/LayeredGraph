@@ -44,6 +44,10 @@ echo "Parsing PubTator data:"
 python3 -u ./PubTator/PubTatorParser.py
 echo
 
+# need the pubtator output included
+cp ./HPO_data_files/gene2phenotype.json ./HPO_graph_data/gene2phenotype.json
+cp ./HPO_data_files/non_alt_loci_set.txt ./HPO_graph_data/non_alt_loci_set.txt
+
 #we need to generate the HPO graph data
 echo
 echo "Building primary HPO graph:"

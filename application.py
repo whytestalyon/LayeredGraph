@@ -5,6 +5,7 @@ This will server as a basic wrapper for the LayeredGraph.  It will primarily be 
 from flask import Flask
 from flask import g
 from flask import jsonify
+from flask import json
 from flask import render_template
 from flask import Response
 from flask import request
@@ -14,29 +15,35 @@ import xmltodict
 from urllib.parse import urlencode, quote_plus
 from pprint import pprint
 
-#since all creation of Graphs is done from a LayeredGraphAPI subfolder, we have to add it to preserve the pickle data
+# since all creation of Graphs is done from a LayeredGraphAPI subfolder, we have to add it to preserve the pickle data
 import sys
+
 sys.path.append("LayeredGraphAPI")
 from HPOParser import getTermsAndSyns
+from PubTator import HGNCParser
+from PhenotypeAPI import PhenotypeCorrelationParser
 
+# define appilication object
 app = Flask(__name__)
+
 
 @app.route('/background')
 def background():
     '''
     TODO: Function to return the background array, can be removed later OR folded into the initialization so background isn't constantly recalculated
     '''
-    #primary data
+    # primary data
     mg = getMultigraphVars()
     hpoWeights = pickle.load(open('./HPO_graph_data/multiHpoWeight_biogrid_pushup.pickle', 'rb'))
     restartProb = 0.1
-    
-    #background calculation
+
+    # background calculation
     bgNodes = mg.nodes['HPO']
-    bgProbs = {('HPO', h) : hpoWeights[h] for h in mg.nodes['HPO']}
+    bgProbs = {('HPO', h): hpoWeights[h] for h in mg.nodes['HPO']}
     bg = mg.calculateBackground(bgProbs, restartProb)
-    
+
     return jsonify(bg)
+
 
 @app.route('/')
 @app.route('/table', methods=['GET'])
@@ -46,12 +53,14 @@ def table():
     '''
     return render_template('textToTable.html')
 
+
 @app.route('/ppi', methods=['GET'])
 def ppi():
     '''
     This will be a deeprank view for the PPI graph.
     '''
     return render_template('protSearch.html')
+
 
 @app.route('/about', methods=['GET'])
 def about():
@@ -60,6 +69,7 @@ def about():
     '''
     return render_template('about.html')
 
+
 @app.route('/terms', methods=['GET'])
 def terms():
     '''
@@ -67,7 +77,6 @@ def terms():
     '''
     # pprint(request.args)
     searchTerm = str(request.args.get('term'))
-    hpoTerms = getTermsAndSyns('./HPO_graph_data/hp.obo')
     options = list([])
 
     for hpo, defText in hpoTerms:
@@ -78,20 +87,49 @@ def terms():
 
     return jsonify({'results': options})
 
+
 @app.route('/genes', methods=['GET'])
 def genes():
     '''
-    This function returns a JSON presentation of the genes that match user typed text
+    This function returns a JSON presentation fo the genes that match the supplied search string
+    :return:
     '''
-    searchTerm = str(request.args.get('term'))
-    protGraph, dummy1, dummy2 = getProtgraphVars()
     options = list([])
-    
-    for geneName in protGraph.nodes['gene']:
-        if searchTerm.lower() in geneName.lower():
-            options.append({'id': geneName, 'text': geneName})
-    
+    search_symbol = str(request.args.get('term'))
+    for gene_symbol in list(entrez_gene_dict.keys()):
+        if search_symbol in gene_symbol:
+            options.append({'id': gene_symbol, 'text': gene_symbol})
+
     return jsonify({'results': options})
+
+
+@app.route('/phenotypegene', methods=['POST'])
+def phenotypes():
+    '''
+    Given an input gene and phenotype terms return the publications and phenotypes PyxisMap associates with it
+    :return:
+    '''
+    req_json = json.loads(request.get_json())
+    search_phenotypes_list = req_json.phenotypes
+    gene_phenotype_indexes = gene2phenotype2pub_index[str(entrez_gene_dict[req_json.gene])]
+    phenotypes4gene = PhenotypeCorrelationParser.read_json_from_index_list(gene_phenotype_indexes)
+    print('Processing gene ' + req_json.gene + ', phenotypes ' + search_phenotypes_list)
+    pmid_dict = dict({})
+    for phenokey in phenotypes4gene:
+        if phenokey in search_phenotypes_list:
+            for pmid in phenotypes4gene[phenokey]:
+                if pmid_dict in pmid_dict:
+                    pmid_dict[pmid].append(phenokey)
+                else:
+                    pmid_dict[pmid] = {phenokey}
+
+    res = []
+    for pmid, phenotypes in pmid_dict.items():
+        res.append(
+            {'terms': phenotypes, 'pmid': pmid, 'count': len(phenotypes)})
+
+    return jsonify({'data': res})
+
 
 @app.route('/rank', methods=['POST'])
 def rank():
@@ -127,36 +165,37 @@ def rank():
            'missingTerms': list(missingTerms)}
     return jsonify(ret)
 
+
 @app.route('/deeprank', methods=['POST'])
 def deeprank():
     '''
     This is intended to be the workhorse function.  POST needs to include a "term" list that should be HPO terms matching values from the layered graph.
     '''
     mydata = request.get_json()
-    
+
     # "constant" global data
     mg, restartProb, hpoWeights, bg = getMultigraphVars()
     hpoTerms = set([str(x) for x in mydata])
     rankTypes = set(['gene'])
-    
+
     # startProbs = {('HPO', h) : hpoWeights[h] for h in hpoTerms}
     startProbs = {}
     usedTerms = set([])
     missingTerms = set([])
-    
+
     indivRanks = {}
-    
+
     for h in hpoTerms:
         if h in hpoWeights:
             startProbs[('HPO', h)] = hpoWeights[h]
             usedTerms.add(h)
-            
-            #do an individual weighting for each term as we go
-            termWeights = mg.RWR_rank({('HPO', h) : 1.0}, restartProb, rankTypes, bg)
+
+            # do an individual weighting for each term as we go
+            termWeights = mg.RWR_rank({('HPO', h): 1.0}, restartProb, rankTypes, bg)
             for i, (w, t, l) in enumerate(termWeights):
                 if (l not in indivRanks):
                     indivRanks[l] = {}
-                indivRanks[l][h] = (i+1, w)
+                indivRanks[l][h] = (i + 1, w)
         else:
             missingTerms.add(h)
 
@@ -164,7 +203,7 @@ def deeprank():
 
     rankings = []
     for i, (w, t, l) in enumerate(rankedGenes):
-        temp = {'weight': w, 'nodeType': t, 'label': l, 'rank': i+1}
+        temp = {'weight': w, 'nodeType': t, 'label': l, 'rank': i + 1}
         temp.update(indivRanks[l])
         rankings.append(temp)
 
@@ -172,6 +211,7 @@ def deeprank():
            'usedTerms': list(usedTerms),
            'missingTerms': list(missingTerms)}
     return jsonify(ret)
+
 
 @app.route('/protrank', methods=['POST'])
 def protrank():
@@ -184,7 +224,7 @@ def protrank():
     mg, restartProb, bg = getProtgraphVars()
     genes = set([str(x) for x in mydata])
     rankTypes = set(['gene'])
-    
+
     startProbs = {}
     usedTerms = set([])
     missingTerms = set([])
@@ -196,7 +236,7 @@ def protrank():
             missingTerms.add(gene)
 
     rankedGenes = mg.RWR_rank(startProbs, restartProb, rankTypes, bg)
-    
+
     rankings = []
     for w, t, l in rankedGenes:
         rankings.append({'weight': w, 'nodeType': t, 'label': l})
@@ -206,35 +246,36 @@ def protrank():
            'missingTerms': list(missingTerms)}
     return jsonify(ret)
 
+
 @app.route('/protdeeprank', methods=['POST'])
 def protdeeprank():
     '''
     PPI workhorse, POST needs to include a "term" list that are gene names for the PPI graph.
     '''
     mydata = request.get_json()
-    
+
     # "constant" global data
     mg, restartProb, bg = getProtgraphVars()
     genes = set([str(x) for x in mydata])
     rankTypes = set(['gene'])
-    
+
     startProbs = {}
     usedTerms = set([])
     missingTerms = set([])
-    
+
     indivRanks = {}
-    
+
     for gene in genes:
         if gene in mg.nodes['gene']:
             startProbs[('gene', gene)] = 1.0
             usedTerms.add(gene)
-            
-            #do an individual weighting for each term as we go
-            termWeights = mg.RWR_rank({('gene', gene) : 1.0}, restartProb, rankTypes, bg)
+
+            # do an individual weighting for each term as we go
+            termWeights = mg.RWR_rank({('gene', gene): 1.0}, restartProb, rankTypes, bg)
             for i, (w, t, l) in enumerate(termWeights):
                 if (l not in indivRanks):
                     indivRanks[l] = {}
-                indivRanks[l][gene] = (i+1, w)
+                indivRanks[l][gene] = (i + 1, w)
         else:
             missingTerms.add(gene)
 
@@ -242,10 +283,10 @@ def protdeeprank():
 
     rankings = []
     for i, (w, t, l) in enumerate(rankedGenes):
-        temp = {'weight': w, 'nodeType': t, 'label': l, 'rank': i+1}
+        temp = {'weight': w, 'nodeType': t, 'label': l, 'rank': i + 1}
         temp.update(indivRanks[l])
         rankings.append(temp)
-    
+
     graphLimit = 25
     graphNodes = []
     graphEdges = []
@@ -256,13 +297,14 @@ def protdeeprank():
             conf = mg.getEdge(t, l, t2, l2, False)
             if ew > 0:
                 graphEdges.append((l, l2, ew, conf))
-    
+
     ret = {'rankings': rankings,
            'usedTerms': list(usedTerms),
            'missingTerms': list(missingTerms),
            'graphNodes': graphNodes,
            'graphEdges': graphEdges}
     return jsonify(ret)
+
 
 @app.route('/text/annotate', methods=['GET'])
 def textannotate():
@@ -280,13 +322,12 @@ def textannotate():
     try:
         resp = requests.get(url)
     except Exception as e:
-        print("Python Exception: "+str(e))
+        print("Python Exception: " + str(e))
         return jsonify({'annotatorStatus': 'UNKNOWN', 'terms': {}})
-        
+
     returnCode = resp.status_code
-    
+
     # get definitions of HPO terms
-    hpoTerms = getTermsAndSyns('./HPO_graph_data/hp.obo')
     hpo_terms_defs = {}
     try:
         for annot in resp.json():
@@ -296,12 +337,13 @@ def textannotate():
                     hpo_terms_defs[hpoid] = defText
                     break
     except Exception as e:
-        print("Annotator response: "+str(resp.json()))
-        print("Python Exception: "+str(e))
+        print("Annotator response: " + str(resp.json()))
+        print("Python Exception: " + str(e))
 
     resp.close()
 
     return jsonify({'annotatorStatus': returnCode, 'terms': hpo_terms_defs})
+
 
 def getMultigraphVars():
     '''
@@ -310,24 +352,25 @@ def getMultigraphVars():
     @return - tuple of variables (multigraph, restart prob, hpo weights, background weights)
     '''
     if not hasattr(g, 'mg'):
-        #load or generate the graph
+        # load or generate the graph
         pickleGraphFN = './HPO_graph_data/multigraph.pickle'
-        print('Loading from "'+pickleGraphFN+'"')
-        
-        #these are variable that need to be set for multiple uses
+        print('Loading from "' + pickleGraphFN + '"')
+
+        # these are variable that need to be set for multiple uses
         g.mg = pickle.load(open(pickleGraphFN, 'rb'))
-    
+
     if not hasattr(g, 'restartProb'):
         g.restartProb = 0.1
-    
+
     if not hasattr(g, 'hpoWeights'):
         g.hpoWeights = pickle.load(open('./HPO_graph_data/multiHpoWeight_biogrid_pushup.pickle', 'rb'))
-    
+
     if not hasattr(g, 'bg'):
-        bgProbs = {('HPO', h) : g.hpoWeights[h] for h in g.mg.nodes['HPO']}
+        bgProbs = {('HPO', h): g.hpoWeights[h] for h in g.mg.nodes['HPO']}
         g.bg = g.mg.calculateBackground(bgProbs, g.restartProb)
-    
+
     return (g.mg, g.restartProb, g.hpoWeights, g.bg)
+
 
 def getProtgraphVars():
     '''
@@ -335,26 +378,36 @@ def getProtgraphVars():
     @return - tuple of variables (multigraph, restart prob, background weights)
     '''
     if not hasattr(g, 'protgraph'):
-        #load the graph
+        # load the graph
         pickleGraphFN = './HPO_graph_data/protgraph.pickle'
-        print('Loading from "'+pickleGraphFN+'"')
+        print('Loading from "' + pickleGraphFN + '"')
         g.protgraph = pickle.load(open(pickleGraphFN, 'rb'))
-    
+
     if not hasattr(g, 'protRestartProb'):
         g.protRestartProb = 0.1
-    
+
     if not hasattr(g, 'protBG'):
-        bgProbs = {('gene', v) : 1.0 for v in g.protgraph.nodes['gene']}
+        bgProbs = {('gene', v): 1.0 for v in g.protgraph.nodes['gene']}
         g.protBG = g.protgraph.calculateBackground(bgProbs, g.protRestartProb)
-    
+
     return (g.protgraph, g.protRestartProb, g.protBG)
-    
+
+
 # run the app.
 if __name__ == "__main__":
     # Setting debug to True enables debug output. This line should be
     # removed before deploying a production app.
-    
-    #initializeLayeredGraph()
+
+    # initializeLayeredGraph()
+    # define global data caches
+    print('Caching HPO...')
+    global hpoTerms
+    hpoTerms = getTermsAndSyns('./HPO_graph_data/hp.obo')
+    print('Caching HGNC gene data...')
+    global entrez_gene_dict
+    entrez_gene_dict = HGNCParser.load_genes()
+    print('Caching PubTator data...')
+    global gene2phenotype2pub_index
+    gene2phenotype2pub_index = PhenotypeCorrelationParser.get_index()
 
     app.run(debug=True, host='0.0.0.0')
-    

@@ -15,3 +15,14 @@ def get_hgnc_genes_ids():
     hgnc_file.close()
 
     return accepted_entrez_ids
+
+def load_genes():
+    hgnc_filename = './HPO_graph_data/non_alt_loci_set.txt'
+    hgnc_file = open(hgnc_filename, "r")
+    genes_dict = {}
+    for line in hgnc_file:
+        cols = line.split("\t")
+        genes_dict[cols[1]] = cols[18]
+
+    hgnc_file.close()
+    return genes_dict

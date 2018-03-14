@@ -370,6 +370,48 @@
                                         }
                                     }
                                 });
+
+
+                                var columns4pheno = [
+                                    {title: "Match Count", data: 'count'},
+                                    {title: "PubMed ID", data: 'pmid'},
+                                    {title: "Matched Phenotypes", data: 'terms'}
+                                ];
+
+                                var geneData = {
+                                    gene: rowdata.label,
+                                    phenotypes: clickData.filter(function (po) {
+                                            return po.weight * 1 > 0
+                                        })
+                                        .map( function (value) {
+                                            return value.hpo_num
+                                        })
+                                };
+
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '/phenotypegene',
+                                    data: JSON.stringify(geneData),
+                                    success: function(data) {
+                                        console.log(data);
+                                        $("#resclickdiv").append("<h3>Papers for Gene</h3><br>");
+                                        $("#resclickdiv").append("<table id=\"restable\" class=\"display\"></table>");
+
+                                        //first create a DataTable hosting the primary results that is sorted by rank
+                                        $("#restable").DataTable({
+                                            data: data.data,
+                                            columns: columns4pheno,
+                                            order: [[0, 'desc']],
+                                            scrollX: true
+                                        });
+                                    },
+                                    error: function (textStatus, errorThrown) {
+                                        $("#resdiv").empty();
+                                        $("#resdiv").append("<h4 style=\"color: red\">ERROR: "+errorThrown+", if the problem persists, contact PyxisMap developers.</h4>");
+                                    },
+                                    contentType: "application/json",
+                                    dataType: 'json'
+                                });
                             });
                         },
                         error: function (textStatus, errorThrown) {
