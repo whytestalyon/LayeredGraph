@@ -393,16 +393,25 @@
                                     url: '/phenotypegene',
                                     data: JSON.stringify(geneData),
                                     success: function(data) {
-                                        console.log(data);
                                         $("#resclickdiv").append("<h3>Papers for Gene</h3><br>");
-                                        $("#resclickdiv").append("<table id=\"restable\" class=\"display\"></table>");
+                                        $("#resclickdiv").append("<table id=\"papertable\" class=\"display\"></table>");
+                                        var numbers = data.data.map(function (value) { return value.count });
+                                        var max = Math.max.apply(null, numbers);
+                                        var urlbase = 'https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator/index.cgi?searchtype=PubMed_Search&query=';
+                                        var pmids = data.data.filter(function (v) {
+                                                return v.count === max;
+                                            })
+                                            .map(function (value) {
+                                                return value.pmid;
+                                            });
+                                        url = encodeURI(urlbase + pmids.join(','));
+                                        $("#resclickdiv").append("<a href=\"" + url + "\" target=\"_blank\">PubTator</a>");
 
                                         //first create a DataTable hosting the primary results that is sorted by rank
-                                        $("#restable").DataTable({
+                                        $("#papertable").DataTable({
                                             data: data.data,
                                             columns: columns4pheno,
-                                            order: [[0, 'desc']],
-                                            scrollX: true
+                                            order: [[0, 'desc'],[1, 'desc']]
                                         });
                                     },
                                     error: function (textStatus, errorThrown) {

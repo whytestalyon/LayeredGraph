@@ -5,15 +5,12 @@ This will server as a basic wrapper for the LayeredGraph.  It will primarily be 
 from flask import Flask
 from flask import g
 from flask import jsonify
-from flask import json
 from flask import render_template
 from flask import Response
 from flask import request
 import pickle
 import requests
-import xmltodict
 from urllib.parse import urlencode, quote_plus
-from pprint import pprint
 
 # since all creation of Graphs is done from a LayeredGraphAPI subfolder, we have to add it to preserve the pickle data
 import sys
@@ -109,19 +106,18 @@ def phenotypes():
     Given an input gene and phenotype terms return the publications and phenotypes PyxisMap associates with it
     :return:
     '''
-    req_json = json.loads(request.get_json())
-    search_phenotypes_list = req_json.phenotypes
-    gene_phenotype_indexes = gene2phenotype2pub_index[str(entrez_gene_dict[req_json.gene])]
+    req_json = request.get_json()
+    search_phenotypes_list = req_json['phenotypes']
+    gene_phenotype_indexes = gene2phenotype2pub_index[str(entrez_gene_dict[req_json['gene']])]
     phenotypes4gene = PhenotypeCorrelationParser.read_json_from_index_list(gene_phenotype_indexes)
-    print('Processing gene ' + req_json.gene + ', phenotypes ' + search_phenotypes_list)
     pmid_dict = dict({})
     for phenokey in phenotypes4gene:
         if phenokey in search_phenotypes_list:
             for pmid in phenotypes4gene[phenokey]:
-                if pmid_dict in pmid_dict:
+                if pmid in pmid_dict:
                     pmid_dict[pmid].append(phenokey)
                 else:
-                    pmid_dict[pmid] = {phenokey}
+                    pmid_dict[pmid] = [phenokey]
 
     res = []
     for pmid, phenotypes in pmid_dict.items():
