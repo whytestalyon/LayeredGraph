@@ -1,7 +1,7 @@
 '''
 This will server as a basic wrapper for the LayeredGraph.  It will primarily be an API with minimal actual HTML utility.
 '''
-
+import json
 from flask import Flask
 from flask import g
 from flask import jsonify
@@ -108,16 +108,19 @@ def phenotypes():
     '''
     req_json = request.get_json()
     search_phenotypes_list = req_json['phenotypes']
-    gene_phenotype_indexes = gene2phenotype2pub_index[str(entrez_gene_dict[req_json['gene']])]
-    phenotypes4gene = PhenotypeCorrelationParser.read_json_from_index_list(gene_phenotype_indexes)
+
+    phenotypes4gene = PhenotypeCorrelationParser \
+        .read_pubmed_info_from_index("./HPO_graph_data/gene2phenotype.json",
+                                     gene2phenotype2pub_blockindex[str(entrez_gene_dict[req_json['gene']])],
+                                     search_phenotypes_list)
+
     pmid_dict = dict({})
-    for phenokey in phenotypes4gene:
-        if phenokey in search_phenotypes_list:
-            for pmid in phenotypes4gene[phenokey]:
-                if pmid in pmid_dict:
-                    pmid_dict[pmid].append(phenokey)
-                else:
-                    pmid_dict[pmid] = [phenokey]
+    for phenotype, pmids in phenotypes4gene.items():
+        for pmid in pmids:
+            if pmid in pmid_dict:
+                pmid_dict[pmid].append(phenotype)
+            else:
+                pmid_dict[pmid] = [phenotype]
 
     res = []
     for pmid, phenotypes in pmid_dict.items():
@@ -403,7 +406,9 @@ if __name__ == "__main__":
     global entrez_gene_dict
     entrez_gene_dict = HGNCParser.load_genes()
     print('Caching PubTator data...')
-    global gene2phenotype2pub_index
-    gene2phenotype2pub_index = PhenotypeCorrelationParser.get_index()
+    global gene2phenotype2pub_blockindex
+    infile = open('./HPO_graph_data/gene2phenotypeIndex.json')
+    gene2phenotype2pub_blockindex = json.load(infile)
+    infile.close()
 
     app.run(debug=True, host='0.0.0.0')

@@ -44,7 +44,14 @@ def read_pubmed_info_from_index(filepath, block_index, accepted_phenotypes):
 
 
 if __name__ == "__main__":
-    blockindex = build_block_index("/Users/bwilk/workspace/LayeredGraph/HPO_graph_data/gene2phenotype.json")["79912"]
-    print('block: ' + str(blockindex))
+    blockindex = build_block_index("/Users/bwilk/workspace/LayeredGraph/HPO_graph_data/gene2phenotype.json")
+    outfile = open("/Users/bwilk/workspace/LayeredGraph/HPO_graph_data/gene2phenotypeIndex.json", 'w+')
+    json.dump(blockindex, outfile)
+    outfile.close()
+
+    outfile = open("/Users/bwilk/workspace/LayeredGraph/HPO_graph_data/gene2phenotypeIndex.json", 'r')
+    blockindex = json.load(outfile)
+    outfile.close()
+    print('block: ' + str(blockindex["79912"]))
     print(str(read_pubmed_info_from_index("/Users/bwilk/workspace/LayeredGraph/HPO_graph_data/gene2phenotype.json",
-                                          blockindex, ["HP:0003198", "HP:0001324"])))
+                                          blockindex["79912"], ["HP:0003198", "HP:0001324"])))

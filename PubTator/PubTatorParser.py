@@ -9,6 +9,7 @@ import re
 import MedGenParser
 import HpoParser
 import HGNCParser
+from PhenotypeAPI import PhenotypeCorrelationParser
 
 
 def put2dict_of_sets(dict, key, item):
@@ -239,12 +240,13 @@ if __name__ == '__main__':
             outfile.write(json.dumps({'geneId': gene, 'hpoId': hpo, 'pmids': sorted(hpo2pubmed[hpo])}) + '\n')
 
     outfile.close()
+
+    print('Building block index for JSON file...')
+    block_index = PhenotypeCorrelationParser.build_block_index("./HPO_data_files/gene2phenotype.json")
+
+    print('Writing block index to file...')
+    outfile = open("./HPO_data_files/gene2phenotypeIndex.json", 'w+')
+    json.dump(block_index, outfile)
+    outfile.close()
+
     print('All PubTator information consumed in ' + str((time.time() - start)) + ' seconds')
-    #
-    # filter phenotypes that are less likely to truly be related to the gene
-    # Condition that passes phenotypes through
-    #  - list of associated phenotypes is 100 or less
-    #  - all of the phenotypes where the # of pmids citing the association is greater than or equal to the point where
-    #    the # of pmids associated with the phenotype equals the index of the gene to phenotype mapping in a
-    #    list descending by # pmids associated with the mapping
-    #    (i.e. slope will be closest to 0.5 where y = #pmids and x = index + 1)
