@@ -7,7 +7,6 @@ RUN mkdir /LayeredGraph
 
 COPY LayeredGraphAPI /LayeredGraphAPI/
 COPY PubTator /PubTator/
-COPY PhenotypeAPI /PhenotypeAPI/
 COPY buildGraph.sh /buildGraph.sh
 
 #RUN /buildDockerFixtures.sh

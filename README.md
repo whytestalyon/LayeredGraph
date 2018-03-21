@@ -7,7 +7,7 @@ following graphs are all built using this API.  For details on how the API works
 
 ### Software Requirements
 1. Python - developed and tested using Python 3.6.2.
-2. Python packages - numpy, scipy
+2. Python packages - numpy, scipy, pronto, networkx
 
 ## Pre-constructed Graphs
 ### Human Phenotype Ontology (HPO)

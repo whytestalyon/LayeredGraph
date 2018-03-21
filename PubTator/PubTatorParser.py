@@ -9,7 +9,12 @@ import re
 import MedGenParser
 import HpoParser
 import HGNCParser
-from PhenotypeAPI import PhenotypeCorrelationParser
+
+# since this the Phenotype API is in a different folder we need to add it to the python path
+import sys
+sys.path.insert(0, '../PhenotypeAPI/')
+
+import PhenotypeCorrelationParser
 
 
 def put2dict_of_sets(dict, key, item):

@@ -2,3 +2,8 @@
 /__pycache__
 HPO_graph_data/*
 *.pyc
+/docker/fixtures/HPO_data_files
+/docker/fixtures/HPO_graph_data
+.DS_Store
+/docker/fixtures/LayeredGraphAPI
+/docker/fixtures/PubTator
