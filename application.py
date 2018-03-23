@@ -94,7 +94,7 @@ def genes():
     options = list([])
     search_symbol = str(request.args.get('term'))
     for gene_symbol in list(entrez_gene_dict.keys()):
-        if search_symbol in gene_symbol:
+        if search_symbol.lower() in gene_symbol.lower():
             options.append({'id': gene_symbol, 'text': gene_symbol})
 
     return jsonify({'results': options})

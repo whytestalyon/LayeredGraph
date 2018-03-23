@@ -20,7 +20,11 @@ def load_genes():
     hgnc_filename = './HPO_graph_data/non_alt_loci_set.txt'
     hgnc_file = open(hgnc_filename, "r")
     genes_dict = {}
+    cntr = 0
     for line in hgnc_file:
+        cntr += 1
+        if cntr == 1:
+            continue
         cols = line.split("\t")
         genes_dict[cols[1]] = cols[18]
 
