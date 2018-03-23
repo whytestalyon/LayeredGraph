@@ -10,6 +10,12 @@ import MedGenParser
 import HpoParser
 import HGNCParser
 
+# since this the Phenotype API is in a different folder we need to add it to the python path
+import sys
+sys.path.insert(0, '../PhenotypeAPI/')
+
+import PhenotypeCorrelationParser
+
 
 def put2dict_of_sets(dict, key, item):
     if key in dict:
@@ -196,56 +202,56 @@ if __name__ == '__main__':
     disease_filename = './HPO_data_files/disease2pubtator.gz'
     gene2pubmed = {}
     pubmed2disease = {}
-    
+
     print('Loading gene-pubmed...')
     with gzip.open(gene_filename, 'rt') as f_in:
         for line in f_in:
             cols = line.rstrip().split('\t')
-            
+
             pmid = cols[0]
             pubmed2disease[pmid] = set([])
-            
+
             genes = cols[1]
             for gene in re.split(',|;', genes):
                 if (gene in accepted_entrez_ids):
                     put2dict_of_sets(gene2pubmed, gene, pmid)
-    
+
     print('Loading pubmed-disease...')
     with gzip.open(disease_filename, 'rt') as f_in:
         for line in f_in:
             cols = line.rstrip().split('\t')
-            
+
             pmid = cols[0]
             if (pmid in pubmed2disease):
                 disease = cols[1]
                 if (disease in accepted_mesh_terms):
                     put2dict_of_sets(pubmed2disease, pmid, disease)
-            
-    
+
     print('Loaded', len(gene2pubmed), 'gene-pubmed keys.')
     print('Loaded', len(pubmed2disease), 'pubmed-disease keys.')
-    
+
     print('Writing results to file...')
     outfile = open("./HPO_data_files/gene2phenotype.json", 'w+')
-    
-    for gene in gene2pubmed:
+
+    for gene in sorted(gene2pubmed.keys()):
         hpo2pubmed = {}
         for pubmed in gene2pubmed[gene]:
             for disease in pubmed2disease.get(pubmed, []):
                 for phen_id in mesh2disease_phenotype_map[disease].nodes:
                     if str(phen_id).startswith('HP'):
                         put2dict_of_sets(hpo2pubmed, phen_id, pubmed)
-        
+
         for hpo in sorted(hpo2pubmed.keys()):
-            outfile.write(json.dumps({'geneId':gene, 'hpoId': hpo, 'pmids': sorted(hpo2pubmed[hpo])})+'\n')
-    
+            outfile.write(json.dumps({'geneId': gene, 'hpoId': hpo, 'pmids': sorted(hpo2pubmed[hpo])}) + '\n')
+
     outfile.close()
+
+    print('Building block index for JSON file...')
+    block_index = PhenotypeCorrelationParser.build_block_index("./HPO_data_files/gene2phenotype.json")
+
+    print('Writing block index to file...')
+    outfile = open("./HPO_data_files/gene2phenotypeIndex.json", 'w+')
+    json.dump(block_index, outfile)
+    outfile.close()
+
     print('All PubTator information consumed in ' + str((time.time() - start)) + ' seconds')
-    #
-    # filter phenotypes that are less likely to truly be related to the gene
-    # Condition that passes phenotypes through
-    #  - list of associated phenotypes is 100 or less
-    #  - all of the phenotypes where the # of pmids citing the association is greater than or equal to the point where
-    #    the # of pmids associated with the phenotype equals the index of the gene to phenotype mapping in a
-    #    list descending by # pmids associated with the mapping
-    #    (i.e. slope will be closest to 0.5 where y = #pmids and x = index + 1)

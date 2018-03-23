@@ -7,7 +7,13 @@ following graphs are all built using this API.  For details on how the API works
 
 ### Software Requirements
 1. Python - developed and tested using Python 3.6.2.
-2. Python packages - numpy, scipy
+2. Python packages - numpy, scipy, pronto, networkx
+3. Docker and Docker Compose
+
+### Hardware Requirements
+1. Docker needs to have at least 4GB of RAM allocated to it from the host machine
+2. At minimum Docker needs 2 CPUs allocated to it
+3. At minimum DOcker needs 64GB of disk allocated to it
 
 ## Pre-constructed Graphs
 ### Human Phenotype Ontology (HPO)

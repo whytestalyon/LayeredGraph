@@ -3,6 +3,8 @@ FROM python:3
 RUN pip3 install flask flask-restful requests numpy pronto six scipy xmltodict
 
 COPY application.py /LayeredGraph/
+COPY PubTator /LayeredGraph/PubTator/
+COPY PhenotypeAPI /LayeredGraph/PhenotypeAPI/
 COPY LayeredGraphAPI /LayeredGraph/LayeredGraphAPI/
 COPY templates /LayeredGraph/templates/
 COPY static /LayeredGraph/static/

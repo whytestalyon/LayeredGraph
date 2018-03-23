@@ -370,6 +370,57 @@
                                         }
                                     }
                                 });
+
+
+                                var columns4pheno = [
+                                    {title: "Match Count", data: 'count'},
+                                    {title: "PubMed ID", data: 'pmid'},
+                                    {title: "Matched Phenotypes", data: 'terms'}
+                                ];
+
+                                var geneData = {
+                                    gene: rowdata.label,
+                                    phenotypes: clickData.filter(function (po) {
+                                            return po.weight * 1 > 0
+                                        })
+                                        .map( function (value) {
+                                            return value.hpo_num
+                                        })
+                                };
+
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '/phenotypegene',
+                                    data: JSON.stringify(geneData),
+                                    success: function(data) {
+                                        $("#resclickdiv").append("<h3>Papers for Gene</h3><br>");
+                                        $("#resclickdiv").append("<table id=\"papertable\" class=\"display\"></table>");
+                                        var numbers = data.data.map(function (value) { return value.count });
+                                        var max = Math.max.apply(null, numbers);
+                                        var urlbase = 'https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator/index.cgi?searchtype=PubMed_Search&query=';
+                                        var pmids = data.data.filter(function (v) {
+                                                return v.count === max;
+                                            })
+                                            .map(function (value) {
+                                                return value.pmid;
+                                            });
+                                        url = encodeURI(urlbase + pmids.join(','));
+                                        $("#resclickdiv").append("<a href=\"" + url + "\" target=\"_blank\">PubTator</a>");
+
+                                        //first create a DataTable hosting the primary results that is sorted by rank
+                                        $("#papertable").DataTable({
+                                            data: data.data,
+                                            columns: columns4pheno,
+                                            order: [[0, 'desc'],[1, 'desc']]
+                                        });
+                                    },
+                                    error: function (textStatus, errorThrown) {
+                                        $("#resdiv").empty();
+                                        $("#resdiv").append("<h4 style=\"color: red\">ERROR: "+errorThrown+", if the problem persists, contact PyxisMap developers.</h4>");
+                                    },
+                                    contentType: "application/json",
+                                    dataType: 'json'
+                                });
                             });
                         },
                         error: function (textStatus, errorThrown) {

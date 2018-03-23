@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 cp -r ../../LayeredGraphAPI .
-cp -r ../../PubTator PubTator
+cp -r ../../PubTator .
+cp ../../PhenotypeAPI/PhenotypeCorrelationParser.py ./PubTator/
 
 docker build -t docker-registry.haib.org/sdi/layered-graph-fixtures .
 if [ $? -ne 0 ]; then
