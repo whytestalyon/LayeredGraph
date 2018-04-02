@@ -108,10 +108,13 @@ def phenotypes():
     '''
     req_json = request.get_json()
     search_phenotypes_list = req_json['phenotypes']
+    search_gene = req_json['gene']
+    if 'ORF' in str(search_gene):
+        search_gene = str(search_gene).replace('ORF', 'orf')
 
     phenotypes4gene = PhenotypeCorrelationParser \
         .read_pubmed_info_from_index("./HPO_graph_data/gene2phenotype.json",
-                                     gene2phenotype2pub_blockindex[str(entrez_gene_dict[req_json['gene']])],
+                                     gene2phenotype2pub_blockindex[str(entrez_gene_dict[search_gene])],
                                      search_phenotypes_list)
 
     pmid_dict = dict({})
