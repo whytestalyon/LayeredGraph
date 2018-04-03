@@ -26,7 +26,7 @@ def load_genes():
         if cntr == 1:
             continue
         cols = line.split("\t")
-        genes_dict[cols[1]] = cols[18]
+        genes_dict[str(cols[1]).upper()] = cols[18]
 
     hgnc_file.close()
     return genes_dict
