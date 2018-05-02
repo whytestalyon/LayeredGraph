@@ -82,3 +82,5 @@ To stop the server enter the following command into a terminal (making sure you 
 docker-compose down
 ```
 at this point the server will be stopped, and the containers will be cleaned up!
+
+This software is free for use for academic and non-profit endeavors. Please contact bwilk@hudsonalpha.org of jholt@hudsonalpha.org to inquire about commercial use. 
