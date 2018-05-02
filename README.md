@@ -83,4 +83,195 @@ docker-compose down
 ```
 at this point the server will be stopped, and the containers will be cleaned up!
 
+
+## REST API
+To allow for extension and greater use of the application the web application was built on top of a RESTful API.
+
+### Paths
+#### Query HPO terms
+| Field | Value |
+| ----- | ----- |
+| Description | returns a JSON presentation of the terms that match user typed text |
+| Method | GET |
+| Path | `/terms` |
+| Return | JSON |
+| Query Parameters | `term` = string of text to search for; can be HPO ID or disease/phenotype text |  
+
+Example Call: 
+
+`/terms?term=HP%3A0001234`
+
+Example results: 
+```json
+{
+  "results": [
+    {
+      "id": "HP:0001234",
+      "text": "HP:0001234 Hitchhiker thumb; Hitchhiker thumb; Abducted thumb"
+    }
+  ]
+}
+```
+
+#### Query Gene Symbols
+| Field | Value |
+| ----- | ----- |
+| Description | returns a JSON presentation fo the genes that match the supplied search string |
+| Method | GET |
+| Path | `/genes` |
+| Return | JSON |
+| Query Parameters | `term` = string of gene symbol to search for |  
+
+Example Call: 
+
+`/genes?term=A2M`
+
+Example results: 
+```json
+{
+  "results": [
+    {
+      "id": "A2M",
+      "text": "A2M"
+    },
+    {
+      "id": "A2M-AS1",
+      "text": "A2M-AS1"
+    },
+    {
+      "id": "A2ML1",
+      "text": "A2ML1"
+    },
+    {
+      "id": "A2ML1-AS1",
+      "text": "A2ML1-AS1"
+    },
+    {
+      "id": "A2ML1-AS2",
+      "text": "A2ML1-AS2"
+    },
+    {
+      "id": "A2MP1",
+      "text": "A2MP1"
+    }
+  ]
+}
+```
+
+#### Query Phenotype to Gene correlation
+| Field | Value |
+| ----- | ----- |
+| Description | Given an input gene and phenotype terms return the publications and phenotypes PyxisMap associates with it |
+| Method | POST |
+| Path | `/phenotypegene` |
+| Return | JSON |
+| Payload | JSON |  
+
+Example Payload:
+
+```json
+{
+  "gene": "SPTBN2",
+  "phenotypes": [
+    "HP:0001251"
+  ]
+}
+```
+
+Example Call: 
+
+`/phenotypegene`
+
+Example results: 
+```json
+{
+  "data": [
+    {
+      "count": 1,
+      "pmid": "10417284",
+      "terms": [
+        "HP:0001251"
+      ]
+    },
+    {
+      "count": 1,
+      "pmid": "10434652",
+      "terms": [
+        "HP:0001251"
+      ]
+    },
+    {
+      "count": 1,
+      "pmid": "10522902",
+      "terms": [
+        "HP:0001251"
+      ]
+    }
+  ]
+}
+```
+
+#### Query Rank Genes
+| Field | Value |
+| ----- | ----- |
+| Description | Given an input list of HPO IDs produce a ranked list of genes associated with said terms |
+| Method | POST |
+| Path | `/deeprank` |
+| Return | JSON |
+| Payload | JSON |  
+
+Example Payload:
+
+```json
+["HP:0001251", "HP:0001744"]
+```
+
+Example Call: 
+
+`/deeprank`
+
+Example results: 
+```json
+{
+  "rankings": [
+    {
+      "HP:0001251": [
+        444,
+        0.0009026369410655975
+      ],
+      "HP:0001744": [
+        1,
+        0.0027041699843090034
+      ],
+      "label": "MVK",
+      "nodeType": "gene",
+      "rank": 1,
+      "weight": 0.0025840677844297085
+    },
+    {
+      "HP:0001251": [
+        59,
+        0.0012961879743216367
+      ],
+      "HP:0001744": [
+        12,
+        0.0023167158518850595
+      ],
+      "label": "SCYL1",
+      "nodeType": "gene",
+      "rank": 2,
+      "weight": 0.0022486806629565823
+    },
+    ...
+  ],
+  "usedTerms": [
+    "HP:0001251",
+    "HP:0001744"
+  ],
+  "missingTerms": []
+}
+```
+
+
+
 This software is free for use for academic and non-profit endeavors. Please contact bwilk@hudsonalpha.org of jholt@hudsonalpha.org to inquire about commercial use. 
