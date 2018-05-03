@@ -298,4 +298,6 @@ Example results:
 }
 ```
 
-This software is free for use for academic and non-profit endeavors. Please contact bwilk@hudsonalpha.org of jholt@hudsonalpha.org to inquire about commercial use. 
+## License
+
+This software is free for use for academic and non-profit endeavors under the GPL v3. Please contact bwilk@hudsonalpha.org or jholt@hudsonalpha.org to inquire about commercial use. 

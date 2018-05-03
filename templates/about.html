@@ -13,26 +13,23 @@
                 background-position: top right;
                 background-size: 240px 240px;
             }
-            
+
             #outputarea {
                 width: 80%;
-                border: 1px;
-                border-color: gray;
-                border-style: solid;
+                border: 1px solid gray;
                 background: white;
                 padding: 20px;
-                margin: auto;
+                margin-top: 15px;
             }
         </style>
-        
+
         <!-- js libraries w/css styles -->
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
         <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-        
+
         <script>
             $(document).ready(function() {
-                
             });
         </script>
     </head>
@@ -45,7 +42,7 @@
                     <li style="float:right"><a class="active" href="/about">About</a></li>
                 </ul>
             </nav>
-            
+
             <div id="outputarea">
                 <h2>About PyxisMap:</h2>
                 <p>
@@ -60,16 +57,31 @@
                     protein-protein interactions.  This enables researchers to select relevant genes and identify connections between their proteins.  This tool
                     includes a visual representation of the top hits from the PPI network.
                 </p>
-                <h4>Citing PyxisMap:</h4>
+
+                <h4>Citing PyxisMap</h4>
                 <p>Paper forthcoming</p>
-                
+
+                <h4>Source Code</h4>
+                <p>GitHub access forthcoming publication</p>
+
+                <h4>License</h4>
+                <p>This software is free for use for academic and non-profit endeavors under the GPL v3. Please contact us to inquire about commercial licensing.</p>
+
                 <h4>Contact:</h4>
                 <ul>
                     <li>J. Matthew Holt - <a href="mailto:jholt@hudsonalpha.org">jholt@hudsonalpha.org</a></li>
                     <li>Brandon Wilk - <a href="mailto:bwilk@hudsonalpha.org">bwilk@hudsonalpha.org</a></li>
                 </ul>
-                
+
             </div>
+
         </div>
     </body>
+<footer>
+    <div id="license_copy_right">
+        <div class="copyright-statement" id="hpocr">This service/product is using the Human Phenotype Ontology (<a href="http://purl.obolibrary.org/obo/hp.obo" target="_blank">release 2018-03-08</a>). Find out more at <a href="http://www.human-phenotype-ontology.org" target="_blank">www.human-phenotype-ontology.org</a>.</div>
+        <div class="copyright-statement" id="docr">This service/product is using the Disease Ontology (<a href="http://purl.obolibrary.org/obo/doid.obo" target="_blank">release 2018-03-02</a>). Find out more at <a href="http://disease-ontology.org/" target="_blank">http://disease-ontology.org/</a>.</div>
+        <div class="copyright-statement" id="ordocr">This service/product is using the Orphanet Rare Disease Ontology, Orphadata: Free access data from Orphanet. © INSERM 1997. Available on <a href="http://www.orphadata.org" target="_blank">http://www.orphadata.org</a>. Data version (<a href="http://www.orphadata.org/data/ORDO/ordo_orphanet.owl.zip" target="_blank">v2.5</a>).</div>
+    </div>
+</footer>
 </html>

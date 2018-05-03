@@ -55,3 +55,14 @@ nav li a.active {
     white-space: nowrap;
     vertical-align: middle;
 }
+
+.copyright-statement {
+    width: 80%;
+    margin: auto;
+    text-align: center;
+    font-size: small;
+}
+
+footer {
+    margin-top: 15px;
+}
