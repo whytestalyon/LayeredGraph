@@ -272,6 +272,30 @@ Example results:
 }
 ```
 
+#### Annotate text with HPO terms
+| Field | Value |
+| ----- | ----- |
+| Description | Given an input of text produce HPO IDs of terms found within the text (interface to NCBO annotator) |
+| Method | GET |
+| Path | `/text/annotate` |
+| Return | JSON |
+| Query Parameter | `indications` = the text to be annotated with HPO IDs |  
 
+Example Call: 
+
+`/text/annotate?indications=%22HP%3A0001251%22%3A%20%22Ataxia%3B%20Cerebellar%20ataxia%22%2C%0A%20%20%20%20%22HP%3A0001744%22%3A%20%22Splenomegaly%3B%20Increased%20spleen%20size%22%2C%0A%20%20%20%20%22HP%3A0001945%22%3A%20%22Fever%3B%20Fever%3B%20Hyperthermia%3B%20Pyrexia%22%2C%0A%20%20%20%20%22HP%3A0031796%22%3A%20%22Recurrent%3B%20Intermittent%22`
+
+Example results: 
+```json
+{
+  "annotatorStatus": 200,
+  "terms": {
+    "HP:0001251": "Ataxia; Cerebellar ataxia",
+    "HP:0001744": "Splenomegaly; Increased spleen size",
+    "HP:0001945": "Fever; Fever; Hyperthermia; Pyrexia",
+    "HP:0031796": "Recurrent; Intermittent"
+  }
+}
+```
 
 This software is free for use for academic and non-profit endeavors. Please contact bwilk@hudsonalpha.org of jholt@hudsonalpha.org to inquire about commercial use. 
