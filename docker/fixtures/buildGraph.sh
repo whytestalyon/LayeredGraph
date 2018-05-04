@@ -63,8 +63,7 @@ if [[ "download" == "$1" || ! -e disease2pubtator.gz ]]; then
     curl --retry 3 -L ftp://ftp.ncbi.nlm.nih.gov/pub/lu/PubTator/disease2pubtator.gz -o disease2pubtator.gz
 fi
 
-    #ppi data files
-
+#ppi data files
 if [[ "download" == "$1" || ! -e uniprot-all.tab ]]; then
     echo "Downloading PPI graph files..."
     curl --retry 3 -g -L "http://www.uniprot.org/uniprot/?sort=&desc=&compress=yes&query=&fil=organism:%22Homo%20sapiens%20(Human)%20[9606]%22%20AND%20reviewed:yes&force=no&preview=true&format=tab" -o uniprot-all.tab.gz
@@ -102,3 +101,8 @@ python3 -u ./LayeredGraphAPI/PyxisMapBuilder.py
 echo
 echo "Building primary PPI graph:"
 python3 -u ./LayeredGraphAPI/ProtBuilder.py
+
+#build the metadata file
+echo
+echo "Building the metadata file:"
+python3 -u ./buildMetadata.py
