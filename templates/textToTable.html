@@ -104,78 +104,6 @@
                     dataType: 'json'
                 }
             });
-            
-            $("#html_btn").click(function () {
-                $("#resdiv").empty();
-                var selectedTerms = $("input[type='checkbox']:checked").map(function(){
-                    return $(this).attr('name');
-                }).get();
-                var terms = $('.hpo-select').select2('data').map(function(currentValue){ return currentValue.id;});
-                var allTerms = terms.concat(selectedTerms);
-                console.log(allTerms);
-                
-                if(allTerms.length === 0) {
-                    alert("No HPO terms are selected.");
-                    return;
-                }
-                
-                $("#resdiv").append("<h4 style=\"color: blue\">Querying server...</h4>");
-                $.ajax({
-                        type: 'POST',
-                        url: '/rank',
-                        data: JSON.stringify(allTerms),
-                        success: function(data) {
-                            $("#resdiv").empty();
-                            $("#resdiv").append('Used: ' + JSON.stringify(data.usedTerms).replace("[","{").replace("]","}") + '<br>');
-                            $("#resdiv").append('CSV-used: ' + data.usedTerms.sort() + '<br>');
-                            $("#resdiv").append('Missing: ' + data.missingTerms + '<br><br>');
-
-                            var i;
-                            for (i = 0; i < 20; i++) {
-                                $("#resdiv").append(' ' + data.rankings[i].weight + ' ' + data.rankings[i].nodeType + ' ' + data.rankings[i].label + '<br>');
-                            }
-                        },
-                        error: function (textStatus, errorThrown) {
-                            $("#resdiv").empty();
-                            $("#resdiv").append("<h4 style=\"color: red\">ERROR: "+errorThrown+", if the problem persists, contact PyxisMap developers.</h4>");
-                        },
-                        contentType: "application/json",
-                        dataType: 'json'
-                });
-            });
-                        
-            $("#json_btn").click(function () {
-                $("#resdiv").empty();
-                
-                var selectedTerms = $("input[type='checkbox']:checked").map(function(){
-                    return $(this).attr('name');
-                }).get();
-                var terms = $('.hpo-select').select2('data').map(function(currentValue){ return currentValue.id;});
-                var allTerms = terms.concat(selectedTerms);
-                console.log(allTerms);
-                
-                if(allTerms.length === 0) {
-                    alert("No HPO terms are selected.");
-                    return;
-                }
-                
-                $("#resdiv").append("<h4 style=\"color: blue\">Querying server...</h4>");
-                $.ajax({
-                        type: 'POST',
-                        url: '/rank',
-                        data: JSON.stringify(allTerms),
-                        success: function(data) {
-                            $("#resdiv").empty();
-                            $("#resdiv").append(JSON.stringify(data, null, '\t'));
-                        },
-                        error: function (textStatus, errorThrown) {
-                            $("#resdiv").empty();
-                            $("#resdiv").append("<h4 style=\"color: red\">ERROR: "+errorThrown+", if the problem persists, contact PyxisMap developers.</h4>");
-                        },
-                        contentType: "application/json",
-                        dataType: 'json'
-                });
-            });
                         
             $("#genes_btn").click(function () {
                 $("#resdiv").empty();
@@ -457,8 +385,6 @@
                 <h2>Search additional terms not automatically annotated:</h2>
                 <select name="term[]" class="hpo-select" multiple="multiple" style="width: 50%"></select><br>
                 <h2>Select output format</h2>
-                <button id="html_btn">HTML</button>
-                <button id="json_btn">JSON</button>
                 <button id="genes_btn">Genes</button>
                 <button id="table_btn">Table</button>
             </div>
