@@ -28,60 +28,21 @@ a set of other genes.  The graph is built using protein-protein interactions pro
 human gene label.  Gene-to-gene edge weights are calculated based on the maximum confidence provided by ConsensusPathDB for the particular relationship.
 
 ## HPO Server
-### Docker install
+### Docker Quick-start
 Assuming you have docker installed on your machine it's fairly simple to build and run the server within docker (no special
-setup needed on your machine besides having docker installed).
+setup needed on your machine besides having docker installed).  Here are the instructions for a local build and deployment:
 
-First you'll need to build the container (make sure docker is running on your machine):
 ```bash
-cd docker/application
+git clone https://github.com/HudsonAlpha/LayeredGraph.git
+cd LayeredGraph/docker/application
 ./buildApplicationContainer.sh
-```
-
-Then you'll need to build the fixture image that contains all of the graph data:
-```bash
-cd docker/fixtures
+cd ../fixtures
 ./buildFixturesContainer.sh
-```
-
-This will first prompt for login info to download data from the Morgan shared server for use. Then it'll call docker to 
-build a volume container containing the graph data that will be used by the server.
-
-**NOTE:** If changes to the graph data or the application code need to be reloaded you'll have to rebuild the corresponding 
-container first via the respective method listed above and then rerun the application (see below steps on starting the app and stopping it).
-
-### Running the Application
-
-#### Local deployment for live development
-To run the server such that you can do local development on the files and have the changes rendered immediately in a terminal
-(making sure you are in the root directory of the project):
-```bash
+cd ../..
 docker-compose -f local-docker-compose.yml up
 ``` 
 
-#### Regular deployment
-To run the server enter the following command into a terminal (making sure you are in the root directory of the project):
-```bash
-docker-compose up -d
-```
-at this point the server will be running! To access it simply get the IP address of your docker machine, if you're on 
-non-native docker for Mac (`docker-machine ip dev` or `docker-machine ip default`), or use localhost on other platforms (and native docker on Mac)
-and you can access the UI from the URL [http://localhost:5000](http://localhost:5000). 
-
-### Debugging the application
-The nice thing about docker is that it performs some nice magic with respect to logging for us. To get a live feed of the 
-output from the server on stdout and stderr simply use the following command:
-```bash
-docker logs -f layeredgraph_rest_1
-```
-and this will give you a live feed of the output from the server. To stop monitoring the logs simply just hit `ctrl + c`.
-
-### Stopping the server
-To stop the server enter the following command into a terminal (making sure you are in the root directory of the project):
-```bash
-docker-compose down
-```
-at this point the server will be stopped, and the containers will be cleaned up!
+Navigate to [0.0.0.0:5000](http://0.0.0.0:5000) to see the server running.  More details are available on the [Docker Deployment wiki page](https://github.com/HudsonAlpha/LayeredGraph/wiki/Docker-Deployment).
 
 ## License
 
