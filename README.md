@@ -29,8 +29,7 @@ human gene label.  Gene-to-gene edge weights are calculated based on the maximum
 
 ## HPO Server
 ### Docker Quick-start
-Assuming you have docker installed on your machine it's fairly simple to build and run the server within docker (no special
-setup needed on your machine besides having docker installed).  Here are the instructions for a local build and deployment:
+Assuming you have docker installed on your machine it's fairly simple to build and run the server within docker (**IMPORTANT:** Docker needs at least 4GB of memory allocated for building the images).  Here are the instructions for a local build and deployment:
 
 ```bash
 git clone https://github.com/HudsonAlpha/LayeredGraph.git
@@ -39,10 +38,10 @@ cd LayeredGraph/docker/application
 cd ../fixtures
 ./buildFixturesContainer.sh
 cd ../..
-docker-compose -f local-docker-compose.yml up
+docker-compose up -d
 ``` 
 
-Navigate to [0.0.0.0:5000](http://0.0.0.0:5000) to see the server running.  More details are available on the [Docker Deployment wiki page](https://github.com/HudsonAlpha/LayeredGraph/wiki/Docker-Deployment).
+Navigate to [http://localhost:5000](http://localhost:5000) to see the server running.  More details are available on the [Docker Deployment wiki page](https://github.com/HudsonAlpha/LayeredGraph/wiki/Docker-Deployment).
 
 ## License
 
