@@ -48,7 +48,8 @@ def table():
     '''
     This is the page for the table view, it performs a more complex query so it is given its own page
     '''
-    return render_template('textToTable.html')
+    metadata = json.load(open('./HPO_graph_data/metadata.json', 'r'))
+    return render_template('textToTable.html', md=metadata)
 
 
 @app.route('/ppi', methods=['GET'])
@@ -56,7 +57,8 @@ def ppi():
     '''
     This will be a deeprank view for the PPI graph.
     '''
-    return render_template('protSearch.html')
+    metadata = json.load(open('./HPO_graph_data/metadata.json', 'r'))
+    return render_template('protSearch.html', md=metadata)
 
 
 @app.route('/about', methods=['GET'])
@@ -64,7 +66,8 @@ def about():
     '''
     Get the about page
     '''
-    return render_template('about.html')
+    metadata = json.load(open('./HPO_graph_data/metadata.json', 'r'))
+    return render_template('about.html', md=metadata)
 
 
 @app.route('/terms', methods=['GET'])
