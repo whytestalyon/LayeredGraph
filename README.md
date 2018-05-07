@@ -28,6 +28,11 @@ a set of other genes.  The graph is built using protein-protein interactions pro
 human gene label.  Gene-to-gene edge weights are calculated based on the maximum confidence provided by ConsensusPathDB for the particular relationship.
 
 ## HPO Server
+
+### Official Demo Server
+We offer an official demo server stood up at [http://pyxis.hudsonalpha.org](http://pyxis.hudsonalpha.org). This is an up-to-date instance of the latest release PyxisMap.
+This instance can be used to validate a local deployment of the application.    
+
 ### Docker Quick-start
 Assuming you have docker installed on your machine it's fairly simple to build and run the server within docker (**IMPORTANT:** Docker needs at least 4GB of memory allocated for building the images).  Here are the instructions for a local build and deployment:
 
