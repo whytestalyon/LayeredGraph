@@ -8,6 +8,7 @@ RUN mkdir /LayeredGraph
 COPY LayeredGraphAPI /LayeredGraphAPI/
 COPY PubTator /PubTator/
 COPY buildGraph.sh /buildGraph.sh
+COPY buildMetadata.py /buildMetadata.py
 
 #RUN /buildDockerFixtures.sh
 RUN /buildGraph.sh

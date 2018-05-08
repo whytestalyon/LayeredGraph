@@ -59,6 +59,7 @@ nav li a.active {
 .copyright-statement {
     width: 80%;
     margin: auto;
+    padding-top: 10px;
     text-align: center;
     font-size: small;
 }
