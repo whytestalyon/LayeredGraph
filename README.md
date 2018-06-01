@@ -2,7 +2,7 @@
 Methods for building layered graphs and running graph traversal algorithms for analyzing networks in genetics.
 
 ## LayeredGraph API
-```LayeredGraph/LayeredGraph.py``` contains an API for building a graph containing multiple types or "layers" of nodes (for example, genes and HPO terms).  The
+```LayeredGraphAPI/LayeredGraph.py``` contains an API for building a graph containing multiple types or "layers" of nodes (for example, genes and HPO terms).  The
 following graphs are all built using this API.  For details on how the API works, refer to the README within the LayeredGraph subdirectory.
 
 ### Software Requirements
