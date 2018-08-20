@@ -215,6 +215,19 @@ def deeprank():
            'missingTerms': list(missingTerms)}
     return jsonify(ret)
 
+@app.route('/protgenes', methods=['GET'])
+def protgenes():
+    '''
+    This function returns a JSON presentation fo the genes that match the supplied search string
+    :return:
+    '''
+    options = list([])
+    search_symbol = str(request.args.get('term'))
+    for gene_symbol in ppiGenes:
+        if search_symbol.lower() in gene_symbol.lower():
+            options.append({'id': gene_symbol, 'text': gene_symbol})
+
+    return jsonify({'results': options})
 
 @app.route('/protrank', methods=['POST'])
 def protrank():
@@ -374,7 +387,6 @@ def getMultigraphVars():
 
     return (g.mg, g.restartProb, g.hpoWeights, g.bg)
 
-
 def getProtgraphVars():
     '''
     Get any variables related to the protein graph from flask.g.
@@ -395,7 +407,16 @@ def getProtgraphVars():
 
     return (g.protgraph, g.protRestartProb, g.protBG)
 
-
+def getPPIGenes():
+    '''
+    Loads the PPI graph and pulls out the sorted list of genes it is aware of
+    @return - a sorted list of genes in the PPI graph structure
+    '''
+    print('Loading PPI gene set...')
+    pickleGraphFN = './HPO_graph_data/protgraph.pickle'
+    protgraph = pickle.load(open(pickleGraphFN, 'rb'))
+    return sorted(protgraph.nodes['gene'])
+    
 # run the app.
 if __name__ == "__main__":
     # Setting debug to True enables debug output. This line should be
@@ -414,5 +435,7 @@ if __name__ == "__main__":
     infile = open('./HPO_graph_data/gene2phenotypeIndex.json')
     gene2phenotype2pub_blockindex = json.load(infile)
     infile.close()
+    
+    ppiGenes = getPPIGenes()
 
     app.run(debug=True, host='0.0.0.0')
