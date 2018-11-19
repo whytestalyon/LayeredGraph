@@ -1,100 +1,128 @@
 <!doctype html>
 <html>
-    <head>
-        <!--Our custom css-->
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css')}}">
-        <style>
-            body {
-                font-family: "Roboto", sans-serif;
-                background-image: url("{{ url_for('static', filename='img/dna-compass.png')}}");
-                background-repeat: no-repeat;
-                background-attachment: scroll;
-                background-position: top right;
-                background-size: 240px 240px;
-            }
+<head>
+    <!--Our custom css-->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <style>
+        body {
+            font-family: "Roboto", sans-serif;
+            background-image: url("{{ url_for('static', filename='img/dna-compass.png')}}");
+            background-repeat: no-repeat;
+            background-attachment: scroll;
+            background-position: top right;
+            background-size: 240px 240px;
+        }
 
-            #outputarea {
-                width: 80%;
-                border: 1px solid gray;
-                background: white;
-                padding: 20px;
-                margin-top: 15px;
-            }
-        </style>
+        #outputarea {
+            width: 80%;
+            border: 1px solid gray;
+            background: white;
+            padding: 20px;
+            margin-top: 15px;
+        }
+    </style>
 
-        <!-- js libraries w/css styles -->
-        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <!-- js libraries w/css styles -->
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
-        <script>
-            $(document).ready(function() {
-            });
-        </script>
-    </head>
-    <body>
-        <div id="maindiv">
-            <nav>
-                <ul>
-                    <li><a href="/">PyxisMap</a></li>
-                    <li><a href="/ppi">PPI</a></li>
-                    <li style="float:right"><a class="active" href="/about">About</a></li>
-                </ul>
-            </nav>
+    <script>
+        $(document).ready(function () {
+        });
+    </script>
+</head>
+<body>
+<div id="maindiv">
+    <nav>
+        <ul>
+            <li><a href="/">PyxisMap</a></li>
+            <li><a href="/ppi">PPI</a></li>
+            <li style="float:right"><a class="active" href="/about">About</a></li>
+        </ul>
+    </nav>
 
-            <div id="outputarea">
-                <h2>About PyxisMap:</h2>
-                <p>
-                    PyxisMap is a collection of tools based on navigating complex biological networks using graph traversal algorithms.  The main <a href="/">PyxisMap</a>
-                    tool is built by combining phenotype relationships from the <a href="http://human-phenotype-ontology.github.io">Human Phenotype Ontology (HPO)</a> with phenotype-to-gene relationships from
-                    the HPO and <a href="https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator">PubTator</a>.  This enables researchers to select relevant phenotypes and retrieve a ranking of genes most related to that set
-                    of phenotypes.  Additionally, the <a href="https://bioportal.bioontology.org/annotator">National Center for Biomedical Ontology (NCBO) Annotator</a> is connected, allowing for automatic parsing
-                    of plain text (such as a clinical synopsis) to HPO terms.
-                </p>
-                <p>
-                    PyxisMap also includes a <a href="/ppi">Protein-Protein Interaction (PPI)</a> network.  This network is built from the <a href="http://consensuspathdb.org">ConsensusPathDB</a>
-                    protein-protein interactions.  This enables researchers to select relevant genes and identify connections between their proteins.  This tool
-                    includes a visual representation of the top hits from the PPI network.
-                </p>
+    <div id="outputarea">
+        <h2>About PyxisMap:</h2>
+        <p>
+            PyxisMap is a collection of tools based on navigating complex biological networks using graph traversal
+            algorithms. The main <a href="/">PyxisMap</a>
+            tool is built by combining phenotype relationships from the <a
+                href="http://human-phenotype-ontology.github.io">Human Phenotype Ontology (HPO)</a> with
+            phenotype-to-gene relationships from
+            the HPO and <a href="https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator">PubTator</a>. This enables
+            researchers to select relevant phenotypes and retrieve a ranking of genes most related to that set
+            of phenotypes. Additionally, the <a href="https://bioportal.bioontology.org/annotator">National Center for
+            Biomedical Ontology (NCBO) Annotator</a> is connected, allowing for automatic parsing
+            of plain text (such as a clinical synopsis) to HPO terms.
+        </p>
+        <p>
+            PyxisMap also includes a <a href="/ppi">Protein-Protein Interaction (PPI)</a> network. This network is built
+            from the <a href="http://consensuspathdb.org">ConsensusPathDB</a>
+            protein-protein interactions. This enables researchers to select relevant genes and identify connections
+            between their proteins. This tool
+            includes a visual representation of the top hits from the PPI network.
+        </p>
 
-                <h4>Citing PyxisMap</h4>
-                <p>Paper forthcoming</p>
+        <h2>Citing PyxisMap</h2>
+        <p>Paper forthcoming</p>
 
-                <h4>Source Code</h4>
-                <p>GitHub access forthcoming publication</p>
+        <h2>Source Code</h2>
+        <p>https://github.com/HudsonAlpha/LayeredGraph</p>
 
-                <h4>License</h4>
-                <p>This software is free for use for academic and non-profit endeavors under the GPL v3. Please contact us to inquire about commercial licensing.</p>
+        <h2>Contact:</h2>
+        <ul>
+            <li>J. Matthew Holt - <a href="mailto:jholt@hudsonalpha.org">jholt@hudsonalpha.org</a></li>
+            <li>Brandon Wilk - <a href="mailto:bwilk@hudsonalpha.org">bwilk@hudsonalpha.org</a></li>
+        </ul>
 
-                <h4>Contact:</h4>
-                <ul>
-                    <li>J. Matthew Holt - <a href="mailto:jholt@hudsonalpha.org">jholt@hudsonalpha.org</a></li>
-                    <li>Brandon Wilk - <a href="mailto:bwilk@hudsonalpha.org">bwilk@hudsonalpha.org</a></li>
-                </ul>
-
-            </div>
-
+        <h2>License</h2>
+        <div>
+            PyxisMap's licence is available below or as a download <a href="{{ url_for('static', filename='license/PYXISMAP LICENSE AND TERMS OF USE.docx')}}" download>here</a>.
+            {% include 'PYXISMAP LICENSE AND TERMS OF USE.html' %}
         </div>
-    </body>
+
+        <h2>3rd Party Licences & Acknowledgements</h2>
+        <div>
+            The following is a recognition of the third party licences of PyxisMap's dependencies as well as
+            acknowledgements of third party services and data sources.
+            <a href="{{ url_for('static', filename='license/Licenses and Acknowledgments for PyxisMap Dependencies.docx')}}" download>3rd party licenses and acknowledgements</a>
+        </div>
+    </div>
+
+</div>
+</body>
 <footer>
     <div id="license_copy_right">
         <div class="copyright-statement" id="hpocr">
-            This service/product is using the Human Phenotype Ontology (<a href="http://purl.obolibrary.org/obo/hp.obo" target="_blank">{{ md["hpo-data-version"][0] }}</a>). Find out more at <a href="http://www.human-phenotype-ontology.org" target="_blank">www.human-phenotype-ontology.org</a>.
+            This service/product is using the Human Phenotype Ontology (<a href="http://purl.obolibrary.org/obo/hp.obo"
+                                                                           target="_blank">{{ md["hpo-data-version"][0] }}</a>).
+            Find out more at <a href="http://www.human-phenotype-ontology.org" target="_blank">www.human-phenotype-ontology.org</a>.
         </div>
         <div class="copyright-statement" id="docr">
-            This service/product is using the Disease Ontology (<a href="http://purl.obolibrary.org/obo/doid.obo" target="_blank">{{ md["do-data-version"][0] }}</a>). Find out more at <a href="http://disease-ontology.org/" target="_blank">http://disease-ontology.org/</a>.
+            This service/product is using the Disease Ontology (<a href="http://purl.obolibrary.org/obo/doid.obo"
+                                                                   target="_blank">{{ md["do-data-version"][0] }}</a>).
+            Find out more at <a href="http://disease-ontology.org/" target="_blank">http://disease-ontology.org/</a>.
         </div>
         <div class="copyright-statement" id="ordocr">
-            This service/product is using the Orphanet Rare Disease Ontology, Orphadata: Free access data from Orphanet. © INSERM 1997. Available on <a href="http://www.orphadata.org" target="_blank">http://www.orphadata.org</a>.
-            Data version (<a href="http://www.orphadata.org/data/ORDO/ordo_orphanet.owl.zip" target="_blank">v{{ md["orpha-versionInfo"][0] }}</a>).
+            This service/product is using the Orphanet Rare Disease Ontology, Orphadata: Free access data from Orphanet.
+            © INSERM 1997. Available on <a href="http://www.orphadata.org" target="_blank">http://www.orphadata.org</a>.
+            Data version (<a href="http://www.orphadata.org/data/ORDO/ordo_orphanet.owl.zip"
+                             target="_blank">v{{ md["orpha-versionInfo"][0] }}</a>).
         </div>
         <div class="copyright-statement" id="ncbo">
-            This service/product interfaces with the NCBO BioPortal Annotator API (<a href="http://purl.obolibrary.org/obo/doid.obo" target="_blank">http://data.bioontology.org/documentation#nav_annotator</a>). Whetzel PL, Noy NF, Shah NH, Alexander PR, Nyulas C, Tudorache T, Musen MA. BioPortal: enhanced functionality via new Web services from the National Center for Biomedical Ontology to access and use ontologies in software applications. Nucleic Acids Res. 2011 Jul;39(Web Server issue):W541-5. Epub 2011 Jun 14.
+            This service/product interfaces with the NCBO BioPortal Annotator API (<a
+                href="http://purl.obolibrary.org/obo/doid.obo" target="_blank">http://data.bioontology.org/documentation#nav_annotator</a>).
+            Whetzel PL, Noy NF, Shah NH, Alexander PR, Nyulas C, Tudorache T, Musen MA. BioPortal: enhanced
+            functionality via new Web services from the National Center for Biomedical Ontology to access and use
+            ontologies in software applications. Nucleic Acids Res. 2011 Jul;39(Web Server issue):W541-5. Epub 2011 Jun
+            14.
             Find out more at <a href="https://bioportal.bioontology.org/annotator" target="_blank">https://bioportal.bioontology.org/annotator</a>
         </div>
         <div class="copyright-statement" id="ncbo">
-            This service/product is using data annotated by PubTator. Wei CH et. al., PubTator: a Web-based text mining tool for assisting Biocuration, Nucleic acids research, 2013, 41 (W1): W518-W522. doi: 10.1093/nar/gkt44.
+            This service/product is using data annotated by PubTator. Wei CH et. al., PubTator: a Web-based text mining
+            tool for assisting Biocuration, Nucleic acids research, 2013, 41 (W1): W518-W522. doi: 10.1093/nar/gkt44.
             Find out more at <a href="https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator/" target="_blank">https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator/</a>
         </div>
     </div>

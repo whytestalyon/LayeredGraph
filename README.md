@@ -49,5 +49,4 @@ docker-compose up -d
 Navigate to [http://localhost:5000](http://localhost:5000) to see the server running.  More details are available on the [Docker Deployment wiki page](https://github.com/HudsonAlpha/LayeredGraph/wiki/Docker-Deployment).
 
 ## License
-
-This software is free for use for academic and non-profit endeavors under the GPL v3. Please contact bwilk@hudsonalpha.org or jholt@hudsonalpha.org to inquire about commercial use. 
+Please refer to the 'About' section of the PyxisMap UI for information on the licence, or access it directly [here](/static/license/PYXISMAP%20LICENSE%20AND%20TERMS%20OF%20USE.docx)
