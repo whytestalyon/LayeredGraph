@@ -53,4 +53,4 @@ PyxisMap was developed by HudsonAlpha Institute for Biotechnology to simplify an
             ranking genes from phenotypic information. This License and Terms of Use outlines the terms and conditions
             under which User may use PyxisMap. By using PyxisMap, User acknowledges and agrees to be bound by This
             License and Terms of Use. PyxisMap may be used for non-commercial, research purposes only.
-Please refer to the 'About' section of the PyxisMap UI for information on the licence, or access it directly [here](/templates/PYXISMAP%20LICENSE%20AND%20TERMS%20OF%20USE.html) or download it from [here](/static/license/PYXISMAP%20LICENSE%20AND%20TERMS%20OF%20USE.docx).
+Please refer to the 'About' section of the PyxisMap UI for information on the licence, or access it directly [here](/LICENSE).
