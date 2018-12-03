@@ -49,5 +49,8 @@ docker-compose up -d
 Navigate to [http://localhost:5000](http://localhost:5000) to see the server running.  More details are available on the [Docker Deployment wiki page](https://github.com/HudsonAlpha/LayeredGraph/wiki/Docker-Deployment).
 
 ## License
-
-This software is free for use for academic and non-profit endeavors under the GPL v3. Please contact bwilk@hudsonalpha.org or jholt@hudsonalpha.org to inquire about commercial use. 
+PyxisMap was developed by HudsonAlpha Institute for Biotechnology to simplify and improve the accuracy of
+            ranking genes from phenotypic information. This License and Terms of Use outlines the terms and conditions
+            under which User may use PyxisMap. By using PyxisMap, User acknowledges and agrees to be bound by This
+            License and Terms of Use. PyxisMap may be used for non-commercial, research purposes only.
+Please refer to the 'About' section of the PyxisMap UI for information on the licence, or access it directly [here](/LICENSE).
