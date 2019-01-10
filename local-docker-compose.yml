@@ -1,13 +1,20 @@
-version: '2'
+version: '3.4'
 
 services:
-    fixtures:
-        image: docker-registry.haib.org/sdi/layered-graph-fixtures
-    rest:
-        image: docker-registry.haib.org/sdi/layered-graph-server
-        volumes_from:
-          - fixtures
-        volumes:
-          - ./:/LayeredGraph/
-        ports:
-            - "5000:5000"
+  fixtures:
+    image: docker-registry.haib.org/sdi/layered-graph-fixtures
+    volumes:
+      - fixtures-volume:/LayeredGraph/HPO_graph_data
+  rest:
+    image: docker-registry.haib.org/sdi/layered-graph-server
+    volumes:
+      - fixtures-volume:/LayeredGraph/HPO_graph_data
+      - ./:/LayeredGraph/
+    ports:
+      - "5000:5000"
+    restart: always
+    depends_on:
+      - fixtures
+
+volumes:
+  fixtures-volume:
