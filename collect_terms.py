@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
         if resp.status_code == 200:
             print('Writing terms to file...')
-            with open('/Users/brandon/Documents/PM/UDN/terms/' + case_id + '_phenotypes.txt', 'w+') as terms_file:
+            with open('/Users/brandon/Documents/analysis/PM/UDN/terms/' + case_id + '_phenotypes.txt', 'w+') as terms_file:
                 for hpo, desc in resp.json()['terms'].items():
                     terms_file.write(hpo + '\n')
             resp.close()
